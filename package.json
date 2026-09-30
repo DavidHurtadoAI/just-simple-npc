@@ -1,0 +1,20 @@
+{
+  "name": "little-npc",
+  "version": "0.3.1",
+  "private": true,
+  "description": "A small pixel companion with a fan of your favorite commands.",
+  "author": "David Hurtado",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --platform=browser --format=cjs --target=es2020 --external:obsidian --minify --outfile=main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/core.test.mjs",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "obsidian": "1.13.1",
+    "typescript": "5.9.3"
+  }
+}

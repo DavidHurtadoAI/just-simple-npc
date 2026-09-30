@@ -1,0 +1,6 @@
+node_modules/
+main.js
+qa/
+*.zip
+*.log
+.npm-cache/
