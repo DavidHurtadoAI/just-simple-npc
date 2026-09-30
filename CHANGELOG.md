@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0
+
+- Make settings searchable through Obsidian's declarative settings API. Requires Obsidian 1.13.0 or later.
+- Keep the three animated character cards and read-only behavior gallery, with cleanup when settings close or refresh.
+- Use native settings headings, inline slider values and Obsidian's DOM helpers.
+- Use each element's own window for animation timing and DOM creation.
+- Shorten the plugin's command names to **Open favorites** and **Configure favorites**; command IDs and saved choices stay compatible.
+- Replace CSS `!important` overrides with scoped selectors.
+- Add the official Obsidian ESLint rules and a CSS check to local checks and CI.
+- Build releases from tagged source in GitHub Actions and attest all three installable assets.
+- Publish only `main.js`, `manifest.json` and `styles.css`; update manual installation instructions.
+
 ## 0.4.0
 
 First public release under the **Just Simple NPC** name.

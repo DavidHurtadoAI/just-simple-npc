@@ -49,9 +49,11 @@ The artwork is drawn cell by cell on a **16 × 24 pixel grid**, with colored hig
 
 This version is distributed through GitHub releases. It has not been submitted to Obsidian's Community Plugins directory.
 
-1. Download **`just-simple-npc-0.4.0.zip`** from the [latest release](https://github.com/DavidHurtadoAI/just-simple-npc/releases/latest).
+Requires **Obsidian 1.13.0 or later** on desktop.
+
+1. Download **`main.js`, `manifest.json` and `styles.css`** from the [latest release](https://github.com/DavidHurtadoAI/just-simple-npc/releases/latest).
 2. Create a folder named `just-simple-npc` inside your vault's `.obsidian/plugins/` folder.
-3. Extract the ZIP into that folder. The three plugin files must sit directly inside it:
+3. Place the three files directly inside that folder:
 
    ```text
    <your-vault>/
@@ -66,7 +68,7 @@ This version is distributed through GitHub releases. It has not been submitted t
 4. In Obsidian, open **Settings → Community plugins**, enable community plugins if needed, and refresh the installed plugin list or restart Obsidian. Enable **Just Simple NPC**.
 5. Open **Settings → Just Simple NPC** to choose your companion and commands.
 
-You can also download `main.js`, `manifest.json` and `styles.css` individually from the release and place them in the same folder. Obsidian's [community plugin help](https://help.obsidian.md/Extending+Obsidian/Community+plugins) explains the plugin controls.
+Obsidian's [community plugin help](https://help.obsidian.md/Extending+Obsidian/Community+plugins) explains the plugin controls. Releases include only the three installable files.
 
 To update a manual installation, disable Just Simple NPC, replace those three files with the new release, and enable it again. Keep `data.json`: it contains your saved choices.
 
@@ -88,6 +90,8 @@ If you tried the earlier **Little NPC** development build, disable it first and 
 | **Bring your companion back** | Call the NPC to a nearby spot. | Also available from the status bar |
 
 Click the companion's name in the status bar to call it over. Right-click the character or the status-bar name to open settings.
+
+The settings use Obsidian's native declarative API and appear in its settings search. Search for **Character size**, **Walking speed**, **Hover delay**, or a numbered command slot. Slider values appear inline. The character cards and behavior gallery keep their animated previews.
 
 ## What can the NPC do?
 
@@ -112,16 +116,16 @@ The first eight are autonomous activities. The last two respond to your pointer 
 
 Mouse interaction is the main idea, and keyboard access is available too:
 
-- Focus the character and press **Enter**, or run **Just Simple NPC: Open favorite commands** from Obsidian's command palette.
+- Focus the character and press **Enter**, or run **Just Simple NPC: Open favorites** from Obsidian's command palette.
 - Use the **arrow keys**, **Home** or **End** to move between bubbles.
 - Press **Escape** to close the fan and restore the previous focus.
-- **Just Simple NPC: Call your companion here** brings it back; **Just Simple NPC: Configure favorite commands** opens settings.
+- **Just Simple NPC: Call your companion here** brings it back; **Just Simple NPC: Configure favorites** opens settings.
 
 ## Privacy and compatibility
 
 Just Simple NPC has **no runtime dependencies, network requests, analytics or command usage history**. Settings stay in this vault. It does not read your note contents. Selected commands run through Obsidian's command dispatcher and retain their normal behavior.
 
-This is a **desktop plugin for the main Obsidian window**. Extra pop-out workspace windows and mobile are not supported. The current release has been tested in Obsidian **1.14.3**; the manifest declares a minimum version of **1.5.0**, but older versions have not all been tested.
+This is a **desktop plugin for the main Obsidian window**. Extra pop-out workspace windows and mobile are not supported. The current release has been tested in Obsidian **1.14.3** and requires **1.13.0 or later** for native searchable settings. Settings previews also work in Obsidian's separate settings window.
 
 The command catalog and dispatcher are internal Obsidian APIs. Access is feature-detected and kept in a small adapter; Just Simple NPC does not wrap or intercept command callbacks. Compatibility with future Obsidian changes may require updates.
 
@@ -134,7 +138,19 @@ npm ci
 npm run check
 ```
 
-`check` runs strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement and autonomous movement bounds. GitHub Actions runs the same checks on pushes and pull requests.
+`check` runs the official Obsidian ESLint rules with zero warnings, a CSS check prohibiting `!important`, strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement and autonomous movement bounds. GitHub Actions runs the same checks on pushes and pull requests.
+
+Version tags run a separate [release workflow](.github/workflows/release.yml). It checks that the tag, package, manifest and minimum-version mapping agree, builds from that tagged source, and creates GitHub artifact attestations for `main.js`, `manifest.json` and `styles.css`. It verifies provenance before publishing, then downloads the release and checks both byte equality and attestations again.
+
+To verify a downloaded release with the [GitHub CLI](https://cli.github.com/):
+
+```sh
+gh attestation verify main.js --repo DavidHurtadoAI/just-simple-npc --signer-workflow DavidHurtadoAI/just-simple-npc/.github/workflows/release.yml
+gh attestation verify manifest.json --repo DavidHurtadoAI/just-simple-npc --signer-workflow DavidHurtadoAI/just-simple-npc/.github/workflows/release.yml
+gh attestation verify styles.css --repo DavidHurtadoAI/just-simple-npc --signer-workflow DavidHurtadoAI/just-simple-npc/.github/workflows/release.yml
+```
+
+Attestations are stored by GitHub; there are no extra release attachments to install. This provenance workflow applies from **0.5.0** onward.
 
 The main pieces are:
 
@@ -142,7 +158,8 @@ The main pieces are:
 - `src/pixel-grid.ts`: integer enlargement and physical-pixel alignment.
 - `src/companion.ts`: wandering, pointer attention and the command fan.
 - `src/core.ts`: settings, behavior choices and fan geometry.
-- `src/main.ts`: Obsidian lifecycle, settings and command dispatch.
+- `src/main.ts`: Obsidian lifecycle and command dispatch.
+- `src/settings.ts`: searchable settings, command selection and animated previews.
 - `styles.css`: the companion, bubbles and settings UI.
 
 ## Artwork and license

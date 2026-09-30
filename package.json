@@ -1,6 +1,6 @@
 {
   "name": "just-simple-npc",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "A small pixel companion with a fan of your favorite commands.",
   "author": "David Hurtado",
@@ -10,11 +10,15 @@
     "build": "esbuild src/main.ts --bundle --platform=browser --format=cjs --target=es2020 --external:obsidian --minify --outfile=main.js",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/core.test.mjs",
-    "check": "npm run typecheck && npm test && npm run build"
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "lint": "eslint src --max-warnings 0 && stylelint styles.css"
   },
   "devDependencies": {
     "esbuild": "0.25.10",
+    "eslint": "9.39.5",
+    "eslint-plugin-obsidianmd": "0.4.2",
     "obsidian": "1.13.1",
+    "stylelint": "17.15.0",
     "typescript": "5.9.3"
   }
 }
