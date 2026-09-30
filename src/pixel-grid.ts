@@ -25,7 +25,7 @@ export class PixelSurface {
     this.source = canvas.ownerDocument.createElement('canvas');
     this.source.width = SPRITE_WIDTH; this.source.height = SPRITE_HEIGHT;
     const source = this.source.getContext('2d'), output = canvas.getContext('2d');
-    if (!source || !output) throw new Error('Little NPC needs a canvas context.');
+    if (!source || !output) throw new Error('Just Simple NPC needs a canvas context.');
     this.context = source; this.output = output;
   }
   resize(metrics: PixelMetrics): void {

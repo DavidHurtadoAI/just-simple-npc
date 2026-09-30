@@ -1,11 +1,11 @@
-# Little NPC
+# Just Simple NPC
 
 > Not everything has to be about productivity and keyboard shortcuts. Sometimes your workspace just needs a tiny friend who wanders around, waves hello, and gives you an excuse to slow down for a second. The handy commands are a bonus.
 
 **A little company at the edge of your Obsidian workspace.** Pip, Arden and Nova are original pixel-art companions with a life of their own. Your chosen character strolls along the status bar, takes little breaks, watches your mouse, and opens a fan of your favorite commands when you hover or click.
 
-[![Latest release](https://img.shields.io/github/v/release/DavidHurtadoAI/little-npc)](https://github.com/DavidHurtadoAI/little-npc/releases/latest)
-[![CI](https://github.com/DavidHurtadoAI/little-npc/actions/workflows/ci.yml/badge.svg)](https://github.com/DavidHurtadoAI/little-npc/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/DavidHurtadoAI/just-simple-npc)](https://github.com/DavidHurtadoAI/just-simple-npc/releases/latest)
+[![CI](https://github.com/DavidHurtadoAI/just-simple-npc/actions/workflows/ci.yml/badge.svg)](https://github.com/DavidHurtadoAI/just-simple-npc/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ![Pip, Arden and Nova waving, shown at an enlarged integer pixel scale](docs/images/companions.png)
@@ -16,7 +16,7 @@ Your NPC chooses its own little activities. It might wander, sit down, stretch, 
 
 ![Pip stretching at the bottom of an Obsidian workspace](docs/images/npc-in-workspace.png)
 
-*Pip taking a stretch while you work. This example uses the Lanternwood theme and an Infinite Calendar view; neither is required by Little NPC.*
+*Pip taking a stretch while you work. This example uses the Lanternwood theme and an Infinite Calendar view; neither is required by Just Simple NPC.*
 
 ## Your commands, a hover away
 
@@ -25,7 +25,7 @@ Hover over the character to open a fan of speech bubbles. Click a bubble to run 
 ![Five favorite commands arranged in speech bubbles above Pip](docs/images/command-fan.png)
 
 - Choose **up to six fixed commands** from Obsidian or enabled plugins. Five slots are shown by default.
-- Keep them in your preferred order. Little NPC does not rank commands or track how often you use them.
+- Keep them in your preferred order. Just Simple NPC does not rank commands or track how often you use them.
 - Add an optional short label. Long labels are shortened, and the tooltip keeps the full command name.
 - Leave a slot empty to show fewer bubbles. Hidden slots retain their choices when you reduce the slot count.
 - Move across the gaps toward a bubble: the fan stays open. Move away and it closes after a short grace period.
@@ -49,30 +49,32 @@ The artwork is drawn cell by cell on a **16 × 24 pixel grid**, with colored hig
 
 This version is distributed through GitHub releases. It has not been submitted to Obsidian's Community Plugins directory.
 
-1. Download **`little-npc-0.3.1.zip`** from the [latest release](https://github.com/DavidHurtadoAI/little-npc/releases/latest).
-2. Create a folder named `little-npc` inside your vault's `.obsidian/plugins/` folder.
+1. Download **`just-simple-npc-0.4.0.zip`** from the [latest release](https://github.com/DavidHurtadoAI/just-simple-npc/releases/latest).
+2. Create a folder named `just-simple-npc` inside your vault's `.obsidian/plugins/` folder.
 3. Extract the ZIP into that folder. The three plugin files must sit directly inside it:
 
    ```text
    <your-vault>/
      .obsidian/
        plugins/
-         little-npc/
+         just-simple-npc/
            main.js
            manifest.json
            styles.css
    ```
 
-4. In Obsidian, open **Settings → Community plugins**, enable community plugins if needed, and refresh the installed plugin list or restart Obsidian. Enable **Little NPC**.
-5. Open **Settings → Little NPC** to choose your companion and commands.
+4. In Obsidian, open **Settings → Community plugins**, enable community plugins if needed, and refresh the installed plugin list or restart Obsidian. Enable **Just Simple NPC**.
+5. Open **Settings → Just Simple NPC** to choose your companion and commands.
 
 You can also download `main.js`, `manifest.json` and `styles.css` individually from the release and place them in the same folder. Obsidian's [community plugin help](https://help.obsidian.md/Extending+Obsidian/Community+plugins) explains the plugin controls.
 
-To update a manual installation, disable Little NPC, replace those three files with the new release, and enable it again. Keep `data.json`: it contains your saved choices.
+To update a manual installation, disable Just Simple NPC, replace those three files with the new release, and enable it again. Keep `data.json`: it contains your saved choices.
+
+If you tried the earlier **Little NPC** development build, disable it first and use the new `just-simple-npc` folder. Copy its `data.json` into the new folder to keep your character, size and command choices, then enable Just Simple NPC. Only enable one of the two installations. Plugin command IDs now use the `just-simple-npc:` prefix.
 
 ## Make it yours
 
-![Little NPC settings with the three character cards, size selection and command slot count](docs/images/settings.png)
+![Just Simple NPC settings with the three character cards, size selection and command slot count](docs/images/settings.png)
 
 | Setting | What it does | Default |
 | --- | --- | --- |
@@ -110,18 +112,18 @@ The first eight are autonomous activities. The last two respond to your pointer 
 
 Mouse interaction is the main idea, and keyboard access is available too:
 
-- Focus the character and press **Enter**, or run **Little NPC: Open favorite commands** from Obsidian's command palette.
+- Focus the character and press **Enter**, or run **Just Simple NPC: Open favorite commands** from Obsidian's command palette.
 - Use the **arrow keys**, **Home** or **End** to move between bubbles.
 - Press **Escape** to close the fan and restore the previous focus.
-- **Little NPC: Call your companion here** brings it back; **Little NPC: Configure favorite commands** opens settings.
+- **Just Simple NPC: Call your companion here** brings it back; **Just Simple NPC: Configure favorite commands** opens settings.
 
 ## Privacy and compatibility
 
-Little NPC has **no runtime dependencies, network requests, analytics or command usage history**. Settings stay in this vault. It does not read your note contents. Selected commands run through Obsidian's command dispatcher and retain their normal behavior.
+Just Simple NPC has **no runtime dependencies, network requests, analytics or command usage history**. Settings stay in this vault. It does not read your note contents. Selected commands run through Obsidian's command dispatcher and retain their normal behavior.
 
 This is a **desktop plugin for the main Obsidian window**. Extra pop-out workspace windows and mobile are not supported. The current release has been tested in Obsidian **1.14.3**; the manifest declares a minimum version of **1.5.0**, but older versions have not all been tested.
 
-The command catalog and dispatcher are internal Obsidian APIs. Access is feature-detected and kept in a small adapter; Little NPC does not wrap or intercept command callbacks. Compatibility with future Obsidian changes may require updates.
+The command catalog and dispatcher are internal Obsidian APIs. Access is feature-detected and kept in a small adapter; Just Simple NPC does not wrap or intercept command callbacks. Compatibility with future Obsidian changes may require updates.
 
 ## Development
 

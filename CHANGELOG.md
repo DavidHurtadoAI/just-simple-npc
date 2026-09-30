@@ -1,8 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+First public release under the **Just Simple NPC** name.
+
+- Rename the plugin and repository to Just Simple NPC / `just-simple-npc`.
+- Update installation instructions, command names and project links.
+- Refresh the settings screenshot with the new plugin name.
+- Preserve the three characters, pixel rendering, behaviors and command fan.
+- Keep existing choices when migrating the previous development installation.
+
 ## 0.3.1
 
-First public GitHub release.
+Initial development release as Little NPC.
 
 - Three original pixel companions: Pip, Arden and Nova.
 - Eight autonomous activities, plus mouse attention and a command fan.

@@ -23,7 +23,7 @@ function catalog(app: App): Command[] {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export default class LittleNpcPlugin extends Plugin {
+export default class JustSimpleNpcPlugin extends Plugin {
   settings!: Settings;
   companion: Companion | null = null;
   private status: HTMLElement | null = null;
@@ -75,9 +75,9 @@ export default class LittleNpcPlugin extends Plugin {
   execute(id: string): void {
     try {
       const manager = commandManager(this.app);
-      if (!manager?.commands[id]) { new Notice('This command is no longer available. Choose another in Little NPC settings.'); return; }
+      if (!manager?.commands[id]) { new Notice('This command is no longer available. Choose another in Just Simple NPC settings.'); return; }
       if (!manager.executeCommandById(id)) new Notice('This command is not available in the current view.');
-    } catch (error) { console.error('Little NPC: command failed', error); new Notice('The command could not run.'); }
+    } catch (error) { console.error('Just Simple NPC: command failed', error); new Notice('The command could not run.'); }
   }
   openSettings(): void {
     this.companion?.close(false);
@@ -107,7 +107,7 @@ class CommandPicker extends SuggestModal<Command> {
 class NpcSettings extends PluginSettingTab {
   private previewFrame = 0;
   private previewWindow: Window | null = null;
-  constructor(app: App, private npc: LittleNpcPlugin) { super(app, npc); npc.register(() => this.stopPreview()); }
+  constructor(app: App, private npc: JustSimpleNpcPlugin) { super(app, npc); npc.register(() => this.stopPreview()); }
   hide(): void { this.stopPreview(); }
   private stopPreview(): void { this.previewWindow?.cancelAnimationFrame(this.previewFrame); this.previewFrame = 0; this.previewWindow = null; }
   display(): void {
