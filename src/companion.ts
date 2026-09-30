@@ -18,7 +18,7 @@ export class Companion {
   readonly fan: HTMLElement;
   private surface: PixelSurface;
   private metrics!: PixelMetrics;
-  private win: Window & typeof globalThis;
+  private win: Window & typeof window;
   private frame = 0;
   private destroyed = false;
   private lastFrame = 0;
@@ -50,15 +50,15 @@ export class Companion {
   constructor(private doc: Document, private host: CompanionHost) {
     this.win = doc.defaultView!;
     this.motion = this.win.matchMedia('(prefers-reduced-motion: reduce)');
-    this.root = doc.createElement('div'); this.root.className = 'lnp-root';
-    this.actor = doc.createElement('button'); this.actor.className = 'lnp-actor';
+    this.root = doc.body.createDiv({ cls: 'lnp-root' });
+    this.actor = this.root.createEl('button', { cls: 'lnp-actor' });
     this.actor.type = 'button'; this.actor.setAttribute('aria-label', 'Pip — favorite commands');
     this.actor.setAttribute('aria-haspopup', 'menu'); this.actor.setAttribute('aria-expanded', 'false');
     this.actor.title = 'Pip · hover for your commands';
-    this.canvas = doc.createElement('canvas');
+    this.canvas = this.actor.createEl('canvas');
     this.canvas.setAttribute('aria-hidden', 'true'); this.actor.append(this.canvas);
     this.surface = new PixelSurface(this.canvas);
-    this.fan = doc.createElement('div'); this.fan.className = 'lnp-fan';
+    this.fan = this.root.createDiv({ cls: 'lnp-fan' });
     this.fan.setAttribute('role', 'menu'); this.fan.setAttribute('aria-label', 'Favorite commands'); this.fan.hidden = true;
     this.root.append(this.actor, this.fan); this.doc.body.append(this.root);
     this.measure(); this.x = clamp(this.win.innerWidth * .42, this.left, this.right); this.place();
@@ -68,7 +68,7 @@ export class Companion {
     });
     this.listen(this.actor, 'pointerenter', () => {
       this.hovered = true; this.nearby = true; this.cancelClose();
-      if (performance.now() < this.ignoreHoverUntil) return;
+      if (this.win.performance.now() < this.ignoreHoverUntil) return;
       this.clearHover();
       this.hoverTimer = this.win.setTimeout(() => { if (this.hovered) this.open(false); }, this.host.settings().hoverDelay);
     });
@@ -136,8 +136,8 @@ export class Companion {
     const dy = this.pointer.y - (this.floor - 17 * this.metrics.cell);
     const distance = Math.hypot(dx, dy);
     const approaching = distance < this.host.settings().proximity;
-    if (approaching || this.hovered || this.focused || this.opened) this.attentionUntil = performance.now() + 750;
-    this.nearby = approaching || this.hovered || this.focused || this.opened || performance.now() < this.attentionUntil;
+    if (approaching || this.hovered || this.focused || this.opened) this.attentionUntil = this.win.performance.now() + 750;
+    this.nearby = approaching || this.hovered || this.focused || this.opened || this.win.performance.now() < this.attentionUntil;
   }
   private tick(time: number): void {
     if (this.destroyed) return;
@@ -182,29 +182,29 @@ export class Companion {
   open(keyboard = false): void {
     if (this.destroyed) return;
     this.clearHover(); this.cancelClose();
-    if (!this.opened) this.previousFocus = this.doc.activeElement instanceof this.win.HTMLElement ? this.doc.activeElement as HTMLElement : null;
+    if (!this.opened) this.previousFocus = this.doc.activeElement instanceof this.win.HTMLElement ? this.doc.activeElement : null;
     this.opened = true; this.pinned = keyboard; this.nearby = true; this.lastPaint = 0;
     this.actor.setAttribute('aria-expanded', 'true');
     this.fan.replaceChildren();
     const commands = this.host.commands();
     if (!commands.length) {
-      const button = this.doc.createElement('button'); button.className = 'lnp-bubble lnp-empty'; button.type = 'button';
+      const button = this.fan.createEl('button', { cls: 'lnp-bubble lnp-empty' }); button.type = 'button';
       button.textContent = 'Choose your commands'; button.setAttribute('role', 'menuitem');
       button.addEventListener('click', () => { this.close(false); this.host.configure(); }); this.fan.append(button);
     } else {
       for (const [index, command] of commands.entries()) {
-        const button = this.doc.createElement('button'); button.className = 'lnp-bubble'; button.type = 'button';
+        const button = this.fan.createEl('button', { cls: 'lnp-bubble' }); button.type = 'button';
         button.setAttribute('role', 'menuitem'); button.setAttribute('aria-label', command.name);
         button.title = command.available ? command.name : `${command.name} · command unavailable`;
         button.dataset.command = command.id; button.dataset.index = `${index}`;
         button.disabled = !command.available;
-        const icon = this.doc.createElement('span'); icon.className = 'lnp-command-icon'; icon.setAttribute('aria-hidden', 'true');
+        const icon = button.createSpan({ cls: 'lnp-command-icon' }); icon.setAttribute('aria-hidden', 'true');
         if (command.icon) this.host.decorateIcon(icon, command.icon); else icon.textContent = '✦';
-        const label = this.doc.createElement('span'); label.className = 'lnp-command-label'; label.textContent = abbreviate(command.label || command.name);
+        const label = button.createSpan({ cls: 'lnp-command-label' }); label.textContent = abbreviate(command.label || command.name);
         button.append(icon, label);
         button.addEventListener('pointerdown', event => event.preventDefault());
         button.addEventListener('click', () => {
-          this.close(false); this.restoreFocus(); this.ignoreHoverUntil = performance.now() + 900;
+          this.close(false); this.restoreFocus(); this.ignoreHoverUntil = this.win.performance.now() + 900;
           this.host.execute(command.id); this.brain = { ...this.brain, action: 'wave', remaining: 2 };
         });
         this.fan.append(button);
@@ -225,14 +225,14 @@ export class Companion {
     this.fan.style.left = `${left}px`; this.fan.style.top = `${top}px`;
     this.fan.style.width = `${layout.width}px`; this.fan.style.height = `${layout.height + 14}px`;
     this.fan.style.setProperty('--lnp-bubble-width', `${layout.bubbleWidth}px`);
-    const svg = this.doc.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.classList.add('lnp-stems'); svg.setAttribute('aria-hidden', 'true');
+    const svg = this.fan.createSvg('svg', { cls: 'lnp-stems' }); svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('width', `${layout.width}`); svg.setAttribute('height', `${layout.height + 18}`);
     for (const [i, point] of layout.points.entries()) {
       const bubble = bubbles[i]; if (!bubble) continue;
       bubble.style.left = `${layout.width / 2 + point.x - layout.bubbleWidth / 2}px`;
       bubble.style.top = `${layout.height + point.y - 20}px`;
       bubble.style.setProperty('--lnp-order', `${i}`);
-      const path = this.doc.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const path = svg.createSvg('path');
       const startX = anchorX - left, startY = anchorY - top;
       path.setAttribute('d', `M ${startX} ${startY} Q ${startX} ${layout.height + point.y + 38} ${layout.width / 2 + point.x} ${layout.height + point.y + 14}`);
       svg.append(path);
@@ -243,7 +243,7 @@ export class Companion {
   private focusFirst(): void { this.fan.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true }); }
   private onMenuKey(event: KeyboardEvent): void {
     const buttons = Array.from(this.fan.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
-    const index = buttons.indexOf(this.doc.activeElement as HTMLButtonElement);
+    const index = buttons.findIndex(button => button === this.doc.activeElement);
     if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
       event.preventDefault(); this.pinned = true;
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (index + (event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length;
@@ -256,7 +256,7 @@ export class Companion {
     this.fan.hidden = true; this.actor.setAttribute('aria-expanded', 'false');
     this.lastPaint = 0;
     if (restore) this.restoreFocus();
-    this.ignoreHoverUntil = performance.now() + 400;
+    this.ignoreHoverUntil = this.win.performance.now() + 400;
   }
   recall(anchor?: HTMLElement): void {
     this.close(false); this.measure();

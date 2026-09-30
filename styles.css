@@ -7,30 +7,30 @@
   --lnp-paper: var(--background-secondary, #25272e);
   --lnp-line: var(--background-modifier-border, #42464b);
 }
-.lnp-actor {
+.lnp-root button.lnp-actor {
   position: absolute;
   left: 0;
   top: 0;
   display: block;
   min-width: 0;
-  padding: 0 !important;
+  padding: 0;
   margin: 0;
-  border: 0 !important;
+  border: 0;
   border-radius: 6px;
-  background: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  box-shadow: none;
   pointer-events: auto;
   cursor: pointer;
   touch-action: manipulation;
 }
-.lnp-actor:hover { background: transparent !important; }
-.lnp-actor:focus-visible { outline: 2px solid var(--interactive-accent, #9dc3ac); outline-offset: 3px; }
-.lnp-actor canvas { position: absolute; display: block; image-rendering: pixelated; pointer-events: none; }
+.lnp-root button.lnp-actor:hover { background: transparent; }
+.lnp-root button.lnp-actor:focus-visible { outline: 2px solid var(--interactive-accent, #9dc3ac); outline-offset: 3px; }
+.lnp-root button.lnp-actor canvas { position: absolute; display: block; image-rendering: pixelated; pointer-events: none; }
 .lnp-fan { position: absolute; pointer-events: none; }
-.lnp-fan[hidden] { display: none !important; }
+.lnp-root .lnp-fan[hidden] { display: none; }
 .lnp-stems { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 .lnp-stems path { fill: none; stroke: var(--text-muted, #adb4ad); stroke-width: 1; stroke-dasharray: 2 5; opacity: .35; }
-.lnp-bubble {
+.lnp-root button.lnp-bubble {
   position: absolute;
   display: flex;
   align-items: center;
@@ -39,12 +39,12 @@
   height: 40px;
   min-width: 0;
   margin: 0;
-  padding: 0 11px !important;
-  border: 1px solid var(--lnp-line) !important;
-  border-radius: 13px !important;
-  color: var(--lnp-ink) !important;
-  background: var(--lnp-paper) !important;
-  box-shadow: 0 5px 18px #00000024, inset 0 1px 0 #ffffff08 !important;
+  padding: 0 11px;
+  border: 1px solid var(--lnp-line);
+  border-radius: 13px;
+  color: var(--lnp-ink);
+  background: var(--lnp-paper);
+  box-shadow: 0 5px 18px #00000024, inset 0 1px 0 #ffffff08;
   pointer-events: auto;
   text-align: left;
   cursor: pointer;
@@ -54,7 +54,7 @@
   animation: lnp-appear 160ms ease-out both;
   animation-delay: calc(var(--lnp-order, 0) * 18ms);
 }
-.lnp-bubble::after {
+.lnp-root button.lnp-bubble::after {
   content: '';
   position: absolute;
   width: 7px;
@@ -66,36 +66,37 @@
   border-bottom: 1px solid var(--lnp-line);
   transform: rotate(45deg);
 }
-.lnp-bubble:hover, .lnp-bubble:focus-visible {
+.lnp-root button.lnp-bubble:hover, .lnp-root button.lnp-bubble:focus-visible {
   --lnp-line: var(--interactive-accent, #9dc3ac);
-  background: var(--background-modifier-hover, #343b38) !important;
+  background: var(--background-modifier-hover, #343b38);
   outline: none;
 }
-.lnp-bubble:hover::after, .lnp-bubble:focus-visible::after { background: var(--background-modifier-hover, #343b38); }
-.lnp-bubble:disabled { opacity: .45; cursor: default; }
+.lnp-root button.lnp-bubble:hover::after, .lnp-root button.lnp-bubble:focus-visible::after { background: var(--background-modifier-hover, #343b38); }
+.lnp-root button.lnp-bubble:disabled { opacity: .45; cursor: default; }
 .lnp-command-icon { display: inline-flex; flex: 0 0 14px; width: 14px; height: 14px; align-items: center; justify-content: center; color: var(--text-accent, #a5c9b5); }
 .lnp-command-icon svg { width: 14px; height: 14px; }
 .lnp-command-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .lnp-empty { justify-content: center; font-size: 11px; }
-.lnp-status { padding: 0 7px !important; }
-.lnp-call {
+.status-bar .lnp-status { padding: 0 7px; }
+.status-bar .lnp-status button.lnp-call {
   height: 20px;
-  padding: 0 4px !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  padding: 0 4px;
+  background: transparent;
+  box-shadow: none;
   font-size: 11px;
   color: var(--text-muted);
 }
-.lnp-call::before { content: ''; display: inline-block; width: 4px; height: 4px; margin-right: 5px; background: #9ec6a8; box-shadow: 0 0 0 1px #386b6955; }
+.status-bar .lnp-status button.lnp-call::before { content: ''; display: inline-block; width: 4px; height: 4px; margin-right: 5px; background: #9ec6a8; box-shadow: 0 0 0 1px #386b6955; }
 .lnp-settings-hero { display: flex; align-items: center; gap: 22px; padding: 18px 22px; margin-bottom: 24px; border-radius: 16px; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); }
 .lnp-settings-hero canvas { flex-shrink: 0; image-rendering: pixelated; }
-.lnp-settings-hero h2 { margin: 0 0 8px; }
-.lnp-characters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
-.lnp-character { display: flex; flex-direction: column; align-items: center; justify-content: start; height: auto; min-height: 180px; padding: 15px 10px !important; gap: 8px; white-space: normal; text-align: center; border-radius: 12px !important; border: 1px solid var(--background-modifier-border); box-shadow: none !important; background: var(--background-secondary) !important; }
-.lnp-character[aria-pressed="true"] { border-color: var(--interactive-accent); outline: 1px solid var(--interactive-accent); }
-.lnp-character canvas { flex-shrink: 0; image-rendering: pixelated; }
-.lnp-character strong { font-size: 14px; color: var(--text-normal); }
-.lnp-character span { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+.lnp-settings-hero .setting-item-name { margin: 0 0 8px; font-size: 20px; }
+.lnp-settings-hero .setting-item-control { display: none; }
+.lnp-settings .lnp-characters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.lnp-settings .lnp-characters button.lnp-character { display: flex; flex-direction: column; align-items: center; justify-content: start; height: auto; min-height: 180px; padding: 15px 10px; gap: 8px; white-space: normal; text-align: center; border-radius: 12px; border: 1px solid var(--background-modifier-border); box-shadow: none; background: var(--background-secondary); }
+.lnp-settings .lnp-character[aria-pressed="true"] { border-color: var(--interactive-accent); outline: 1px solid var(--interactive-accent); }
+.lnp-settings .lnp-character canvas { flex-shrink: 0; image-rendering: pixelated; }
+.lnp-settings .lnp-character strong { font-size: 14px; color: var(--text-normal); }
+.lnp-settings .lnp-character span { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
 .lnp-settings-hero p { margin: 0; color: var(--text-muted); line-height: 1.6; font-size: 13px; }
 .lnp-slot { padding: 0 12px; margin: 10px 0; border: 1px solid var(--background-modifier-border); border-radius: 10px; }
 .lnp-slot .setting-item:last-child { border-bottom: 0; }
@@ -107,5 +108,16 @@
 .lnp-command-id, .lnp-footnote { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
 .lnp-warning { color: var(--text-warning); }
 @keyframes lnp-appear { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@media (prefers-reduced-motion: reduce) { .lnp-bubble { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .lnp-root button.lnp-bubble { animation: none; } }
 @media (max-width: 700px) { .lnp-actions { grid-template-columns: 1fr; } }
+
+.lnp-settings .lnp-character-setting { display: block; }
+.lnp-settings .lnp-character-setting > .setting-item-info { display: none; }
+.lnp-settings .lnp-character-setting > .setting-item-control { display: block; }
+.lnp-settings .lnp-gallery-setting { display: block; }
+.lnp-settings .lnp-gallery-setting > .setting-item-control { display: none; }
+.lnp-settings .lnp-action > .setting-item { border: 0; padding: 0; gap: 12px; width: 100%; }
+.lnp-settings .lnp-action .setting-item-control { display: none; }
+.lnp-settings .lnp-action .setting-item-name { font-size: 13px; }
+.lnp-settings .lnp-action .setting-item-description { font-size: 12px; line-height: 1.45; }
+.lnp-settings .lnp-slot-command { padding-bottom: 0; border-bottom: 0; }
