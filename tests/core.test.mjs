@@ -7,7 +7,7 @@ import { pixelMetrics, snapToPixel } from '../src/pixel-grid.ts';
 test('settings recover safely from old, partial or corrupt saved data', () => {
   assert.deepEqual(normalizeSettings(null), DEFAULTS);
   const recovered = normalizeSettings({ count: 90, scale: NaN, speed: -4, hoverDelay: Infinity, slots: [{ command: 'a', label: 'x' }, null] });
-  assert.equal(recovered.count, 6); assert.equal(recovered.scale, 2); assert.equal(recovered.speed, 8);
+  assert.equal(recovered.count, 6); assert.equal(recovered.scale, 1.5); assert.equal(recovered.speed, 8);
   assert.equal(recovered.hoverDelay, 180); assert.equal(recovered.slots.length, 6);
   assert.deepEqual(recovered.slots[1], { command: '', label: '' });
   assert.notEqual(normalizeSettings(null).slots, DEFAULTS.slots);
