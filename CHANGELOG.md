@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- Use **Medium** as the default character size for new installations. Existing saved sizes stay unchanged.
+
 ## 0.5.0
 
 - Make settings searchable through Obsidian's declarative settings API. Requires Obsidian 1.13.0 or later.

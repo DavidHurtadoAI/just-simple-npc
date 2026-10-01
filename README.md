@@ -81,7 +81,7 @@ If you tried the earlier **Little NPC** development build, disable it first and 
 | Setting | What it does | Default |
 | --- | --- | --- |
 | **Your companion** | Choose Pip, Arden or Nova. | Pip |
-| **Character size** | Small, Medium or Large, with crisp display scaling. | Large |
+| **Character size** | Small, Medium or Large, with crisp display scaling. | Medium |
 | **Number of slots** | Show one to six command slots. | 5 |
 | **Command / Short label** | Pick each command and optionally give its bubble a shorter name. | Five ready-to-use commands |
 | **Walking speed** | Set the pace from 8 to 48 pixels per second. | 24 |

@@ -24,7 +24,7 @@ export interface Slot { command: string; label: string }
 export interface Settings { count: number; character: Character; scale: number; speed: number; proximity: number; hoverDelay: number; slots: Slot[] }
 
 export const DEFAULTS: Settings = {
-  count: 5, character: 'pip', scale: 2, speed: 24, proximity: 150, hoverDelay: 180,
+  count: 5, character: 'pip', scale: 1.5, speed: 24, proximity: 150, hoverDelay: 180,
   slots: [
     { command: 'switcher:open', label: 'Quick switcher' },
     { command: 'global-search:open', label: 'Search' },
