@@ -25,6 +25,7 @@
   user-select: none;
 }
 .lnp-root[data-dragging="true"] button.lnp-actor { cursor: grabbing; }
+.lnp-settings canvas.lnp-custom-preview { flex-shrink: 0; margin-inline-end: 14px; image-rendering: pixelated; }
 .lnp-root button.lnp-actor:hover { background: transparent; }
 .lnp-root button.lnp-actor:focus-visible { outline: 2px solid var(--interactive-accent, #9dc3ac); outline-offset: 3px; }
 .lnp-root button.lnp-actor canvas { position: absolute; display: block; image-rendering: pixelated; pointer-events: none; }

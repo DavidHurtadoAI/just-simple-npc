@@ -1,10 +1,24 @@
-import { PluginSettingTab, Setting, SuggestModal, Notice, type App, type Command, type SettingDefinitionItem } from 'obsidian';
+import { PluginSettingTab, Setting, SuggestModal, Notice, type App, type Command, type TFile, type SettingDefinitionItem } from 'obsidian';
 import type JustSimpleNpcPlugin from './main';
 import { catalog } from './main';
 import { ACTIONS, CHARACTERS, SIZES, normalizeSettings, type Action, type Character } from './core';
-import { drawSprite } from './sprite';
 import { PixelSurface, pixelMetrics } from './pixel-grid';
 import { searchCommands } from './command-search';
+import type { BackgroundMode } from './sheet-pixels';
+
+class SheetPicker extends SuggestModal<TFile> {
+  private files: TFile[];
+  constructor(app: App, private choose: (file: TFile) => void) {
+    super(app); this.files = app.vault.getFiles().filter(file => file.extension.toLowerCase() === 'png');
+    this.setPlaceholder('Find a PNG sprite sheet in this vault…'); this.emptyStateText = 'No matching PNG files';
+  }
+  getSuggestions(query: string): TFile[] {
+    const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+    return this.files.filter(file => words.every(word => file.path.toLocaleLowerCase().includes(word))).sort((a, b) => a.path.localeCompare(b.path));
+  }
+  renderSuggestion(file: TFile, element: HTMLElement): void { element.createDiv({ text: file.basename }); element.createDiv({ text: file.path, cls: 'lnp-command-id' }); }
+  onChooseSuggestion(file: TFile): void { this.choose(file); }
+}
 
 class CommandPicker extends SuggestModal<Command> {
   private commands: Command[];
@@ -34,12 +48,20 @@ export class NpcSettings extends PluginSettingTab {
     if (label) return this.npc.settings.slots[Number(label[1])].label;
     if (key === 'scale') return SIZES.find(size => size.scale === this.npc.settings.scale)!.name;
     if (key === 'count') return String(this.npc.settings.count);
+    if (key === 'customName') return this.npc.settings.customName;
+    if (key === 'customBackground') return this.npc.settings.customBackground;
     return super.getControlValue(key);
   }
   async setControlValue(key: string, value: unknown): Promise<void> {
     const label = /^slots\.([0-5])\.label$/.exec(key);
+    if (key === 'character' && value === 'custom' && !this.npc.customSprite) { this.reportImportError(new Error('Load and validate a PNG sprite sheet before activating it.')); this.update(); return; }
+    if (key === 'customBackground' && ['transparent', 'auto', 'magenta'].includes(String(value))) {
+      try { await this.npc.changeCustomBackground(value as BackgroundMode); } catch (error) { this.reportImportError(error); }
+      this.update(); return;
+    }
     if (label && typeof value === 'string') this.npc.settings.slots[Number(label[1])].label = value.slice(0, 100);
     else if (key === 'character') this.npc.settings.character = normalizeSettings({ ...this.npc.settings, character: value }).character;
+    else if (key === 'customName') this.npc.settings.customName = normalizeSettings({ ...this.npc.settings, customName: value }).customName;
     else if (key === 'scale' || key === 'count' || key === 'speed' || key === 'proximity' || key === 'hoverDelay') {
       const numeric = key === 'scale' ? SIZES.find(size => size.name === value)?.scale : Number(value);
       this.npc.settings[key] = normalizeSettings({ ...this.npc.settings, [key]: numeric })[key];
@@ -55,9 +77,11 @@ export class NpcSettings extends PluginSettingTab {
     console.error('Just Simple NPC: settings could not be saved', error);
     new Notice('Your companion settings could not be saved.');
   }
+  private reportImportError(error: unknown): void { new Notice(error instanceof Error ? error.message : 'This sprite sheet could not be loaded.', 9000); }
 
   getSettingDefinitions(): SettingDefinitionItem[] {
-    const character = CHARACTERS.find(item => item.id === this.npc.settings.character)!;
+    const character = this.npc.settings.character === 'custom' ? { id: 'custom' as const, name: this.npc.settings.customName }
+      : CHARACTERS.find(item => item.id === this.npc.settings.character)!;
     const commands = catalog(this.app);
     const favorites: SettingDefinitionItem & { type: 'group' } = {
       type: 'group', heading: 'Favorite commands', items: [{
@@ -121,6 +145,52 @@ export class NpcSettings extends PluginSettingTab {
         name: 'Character size', desc: 'Three sizes, adjusted to your display so every pixel is a crisp square. Small characters keep a comfortable hover area.',
         control: { type: 'dropdown', key: 'scale', options: Object.fromEntries(SIZES.map(size => [size.name, size.name])) }
       }]
+    }, {
+      type: 'group', heading: 'Custom companion', items: [{
+        name: 'PNG sprite sheet', desc: this.npc.settings.customPath || 'Save a completed sheet in your vault, then choose it here. It is checked before activation.',
+        aliases: ['custom NPC', 'sprite', 'import', 'PNG'],
+        render: setting => {
+          setting.addButton(button => button.setButtonText(this.npc.settings.customPath ? 'Change sheet' : 'Choose sheet').onClick(() => {
+            new SheetPicker(this.app, file => {
+              void this.npc.chooseCustom(file.path).then(() => this.update()).catch(error => this.reportImportError(error));
+            }).open();
+          }));
+          if (this.npc.settings.customPath) setting.addExtraButton(button => button.setIcon('x').setTooltip('Forget this sheet; keep the PNG file').onClick(() => {
+            void this.npc.clearCustom().then(() => this.update()).catch(error => this.reportSaveError(error));
+          }));
+        }
+      }, {
+        name: 'Custom companion name', desc: 'The name shown in the status bar.',
+        control: { type: 'text', key: 'customName', placeholder: 'My companion' }
+      }, {
+        name: 'Sheet background', desc: 'Keep real PNG transparency, or remove an edge-connected solid background. Painted checkerboards are rejected.',
+        control: { type: 'dropdown', key: 'customBackground', options: { auto: 'Auto-remove solid background', transparent: 'Use PNG transparency', magenta: 'Remove magenta (#FF00FF)' } }
+      }, {
+        name: 'Sheet preview', searchable: false,
+        desc: this.npc.customError ? `${this.npc.customError} Pip stays available.` : this.npc.customSprite
+          ? `Ready: 60 frames. ${this.npc.customSprite.removedBackground ? 'Solid background removed.' : 'PNG transparency retained.'} Select it to see all thirteen behaviors below.`
+          : 'No sheet loaded. Pip, Arden and Nova are always available.',
+        render: setting => {
+          let stop: (() => void) | undefined;
+          let canvas: HTMLCanvasElement | undefined;
+          if (this.npc.customSprite) {
+            canvas = setting.settingEl.createEl('canvas', { cls: 'lnp-custom-preview', prepend: true });
+            stop = this.preview(canvas, 'wave', 'custom');
+          }
+          setting.addButton(button => button.setButtonText(this.npc.settings.character === 'custom' ? 'Custom companion active' : 'Use this companion')
+            .setDisabled(!this.npc.customSprite || this.npc.settings.character === 'custom').onClick(() => {
+              void this.setControlValue('character', 'custom').catch(error => this.reportSaveError(error));
+            }));
+          if (this.npc.settings.customPath) setting.addExtraButton(button => button.setIcon('refresh-cw').setTooltip('Reload and validate the PNG').onClick(() => {
+            void this.npc.reloadCustom().then(() => this.update());
+          }));
+          return () => { stop?.(); canvas?.remove(); };
+        }
+      }, {
+        name: 'Create your own character', desc: 'Download the templates, reference image and prompt. Generate outside Obsidian, then bring the PNG back to your vault.',
+        aliases: ['template', 'sprite sheet', 'ChatGPT', 'creation kit'],
+        render: setting => { setting.descEl.createSpan({ text: ' ' }); setting.descEl.createEl('a', { text: 'Open the creation kit', href: 'https://github.com/DavidHurtadoAI/just-simple-npc/tree/main/docs/custom-npc' }); }
+      }]
     }, favorites, {
       type: 'group', heading: 'Companion', items: [{
         name: 'Walking speed', desc: 'Pixels per second. A gentle stroll is 24.',
@@ -156,7 +226,7 @@ export class NpcSettings extends PluginSettingTab {
     }];
   }
 
-  private preview(canvas: HTMLCanvasElement, action: Action, character: Character): () => void {
+  private preview(canvas: HTMLCanvasElement, action: Action, character: Character | 'custom'): () => void {
     canvas.setAttribute('aria-hidden', 'true');
     const win = canvas.ownerDocument.defaultView!;
     const surface = new PixelSurface(canvas);
@@ -164,8 +234,8 @@ export class NpcSettings extends PluginSettingTab {
     const start = win.performance.now(); let last = -Infinity, frame = 0, stopped = false;
     const paint = (time: number) => {
       surface.resize(pixelMetrics(2, win.devicePixelRatio)); surface.align(win.devicePixelRatio);
-      drawSprite(surface.context, { action, character, time, actionTime: time, direction: 1,
-        gazeX: Math.sin(time * .8), gazeY: Math.cos(time * .6) - .6, reduced: reduced.matches });
+      this.npc.paint(surface.context, { action, character: character === 'custom' ? 'pip' : character, time, actionTime: time, direction: 1,
+        gazeX: Math.sin(time * .8), gazeY: Math.cos(time * .6) - .6, reduced: reduced.matches }, character === 'custom');
       surface.present();
     };
     paint(.8);

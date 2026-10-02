@@ -103,6 +103,18 @@ Click the companion's name in the status bar to call it over. Right-click the ch
 
 The settings use Obsidian's native declarative API and appear in its settings search. Search for **Character size**, **Walking speed**, **Hover delay**, or a numbered command slot. Slider values appear inline. The character cards and behavior gallery keep their animated previews.
 
+## Create a custom NPC
+
+You can load your own character from a **PNG sprite sheet saved inside your vault**. Download the [creation kit](docs/custom-npc/creation-kit.zip), which includes completed Pip, Arden and Nova templates, a blank sheet, the original reference character Rue, a labeled layout guide and a detailed [generation prompt](docs/custom-npc/prompt.txt).
+
+Attach your character image and a filled template to ChatGPT or another image-generation tool, paste the prompt, then save the resulting PNG in your vault. In **Settings → Just Simple NPC → Custom companion**, choose the sheet, give it a name and select **Use this companion**. Review all thirteen actions in the animated gallery. Pip, Arden and Nova remain available from their cards.
+
+<img src="docs/images/custom-settings.png" alt="Custom companion settings with a selected PNG, name, transparency options and animated preview" width="640">
+
+The format is **8 × 8 cells**, each **16 × 24 logical pixels**, with 60 required frames and four reserved cells. Native **128 × 192** sheets and whole-number enlargements such as **1024 × 1536** are accepted. The importer checks dimensions and required cells, keeps real transparency or removes a solid background, and reports the cell to repair when possible. A painted checkerboard is rejected. Generated poses still need a visual review.
+
+PNG changes and renames are detected automatically. A missing or invalid sheet falls back to Pip while keeping your selection; forgetting a sheet leaves the PNG file intact. The plugin makes no image-generation calls or uploads. [Full instructions, downloads and transparency guidance](docs/custom-npc/README.md).
+
 ## What can the NPC do?
 
 The settings include a **read-only gallery with animated previews of all thirteen behaviors** for the selected character. Individual actions are not configurable in this version.
@@ -138,7 +150,7 @@ Mouse interaction is the main idea, and keyboard access is available too:
 
 Just Simple NPC has **no runtime dependencies, network requests, analytics or command usage history**. Settings stay in this vault. It does not read your note contents. Selected commands run through Obsidian's command dispatcher and retain their normal behavior.
 
-This is a **desktop plugin for the main Obsidian window**. Extra pop-out workspace windows and mobile are not supported. The current release has been tested in Obsidian **1.14.3** and requires **1.13.0 or later** for native searchable settings. Settings previews also work in Obsidian's separate settings window.
+This is a **desktop plugin for the main Obsidian window**. Extra pop-out workspace windows and mobile are not supported. This build has been tested in Obsidian **1.14.4** and requires **1.13.0 or later** for native searchable settings. Settings previews also work in Obsidian's separate settings window.
 
 The command catalog and dispatcher are internal Obsidian APIs. Access is feature-detected and kept in a small adapter; Just Simple NPC does not wrap or intercept command callbacks. Compatibility with future Obsidian changes may require updates.
 
@@ -151,7 +163,7 @@ npm ci
 npm run check
 ```
 
-`check` runs the official Obsidian ESLint rules with zero warnings, a CSS check prohibiting `!important`, strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement, autonomous movement bounds, falling physics at different refresh rates and command searches. GitHub Actions runs the same checks on pushes and pull requests.
+`check` runs the official Obsidian ESLint rules with zero warnings, a CSS check prohibiting `!important`, strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement, autonomous movement bounds, falling physics at different refresh rates, command searches, the shipped sprite sheets and background removal. GitHub Actions runs the same checks on pushes and pull requests.
 
 Version tags run a separate [release workflow](.github/workflows/release.yml). It checks that the tag, package, manifest and minimum-version mapping agree, builds from that tagged source, and creates GitHub artifact attestations for `main.js`, `manifest.json` and `styles.css`. It verifies provenance before publishing, then downloads the release and checks both byte equality and attestations again.
 
@@ -168,6 +180,8 @@ Attestations are stored by GitHub; there are no extra release attachments to ins
 The main pieces are:
 
 - `src/sprite.ts`: original pixel matrices, palettes and animation poses.
+- `src/sheet-layout.ts`, `src/sheet-pixels.ts`, `src/custom-sprite.ts`: custom format, transparency validation and playback.
+- `scripts/export-sheets.mjs`: reproducible native and enlarged PNG templates.
 - `src/pixel-grid.ts`: integer enlargement and physical-pixel alignment.
 - `src/companion.ts`: wandering, dragging, pointer attention and the command fan.
 - `src/physics.ts`: acceleration, falling speed limit and landing timing.
@@ -179,6 +193,6 @@ The main pieces are:
 
 ## Artwork and license
 
-All three characters and their animations are original artwork. The design takes cues from atmospheric pixel art; no game assets are used. Useful references include [Derek Yu's pixel-art tutorial](https://www.derekyu.com/makegames/pixelart.html), [Saint11 on clusters](https://saint11.art/pixel_art_articles/article2/), [Saint11 on animation](https://saint11.art/pixel_art_articles/article3/) and [MDN's canvas rendering guidance](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas).
+Pip, Arden and Nova and their animations are original code-authored artwork. The additional Rue reference was created with image generation for the custom-character kit. The design takes cues from atmospheric pixel art; no game assets are used. Useful references include [Derek Yu's pixel-art tutorial](https://www.derekyu.com/makegames/pixelart.html), [Saint11 on clusters](https://saint11.art/pixel_art_articles/article2/), [Saint11 on animation](https://saint11.art/pixel_art_articles/article3/) and [MDN's canvas rendering guidance](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas).
 
 Code and original artwork are released under the [MIT License](LICENSE). Created by **David Hurtado**.
