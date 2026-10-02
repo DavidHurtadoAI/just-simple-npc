@@ -8,24 +8,6 @@
 [![CI](https://github.com/DavidHurtadoAI/just-simple-npc/actions/workflows/ci.yml/badge.svg)](https://github.com/DavidHurtadoAI/just-simple-npc/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-![Pip, Arden and Nova waving, shown at an enlarged integer pixel scale](docs/images/companions.png)
-
-## A small companion, a gentle pace
-
-Your NPC chooses its own little activities. It might wander, sit down, stretch, wave or doze. Bring the mouse closer and it pauses what it is doing to look at you. Its head follows the pointer in four directions: left, right, up-left and up-right.
-
-You can also **drag your companion** to move it. Lift it above the status bar and it raises both hands and fidgets a little. Release it and gravity brings it back to the floor, with a limited falling speed and no bounce. It lands softly, sits for **two seconds**, then carries on. A small movement threshold keeps ordinary clicks working; dropping the character never opens the command fan. Press Escape to release it while dragging.
-
-![Pip being picked up, dropped and resting briefly before carrying on in Obsidian](docs/images/drag-and-drop.gif)
-
-*Pick up your tiny friend, let go, and give it a moment to catch its breath.*
-
-With **Reduce motion** enabled, the character holds a still pose while lifted and returns directly to the floor when released, keeping the short seated pause.
-
-![Pip stretching at the bottom of an Obsidian workspace](docs/images/npc-in-workspace.png)
-
-*Pip taking a stretch while you work. This example uses the Lanternwood theme and an Infinite Calendar view; neither is required by Just Simple NPC.*
-
 ## Your commands, a hover away
 
 Hover over the character to open a fan of speech bubbles. Click a bubble to run that command in your current Obsidian context. You can also click the character to open the fan immediately.
@@ -42,6 +24,24 @@ Hover over the character to open a fan of speech bubbles. Click a bubble to run 
 The default five commands are **Quick switcher**, **Search**, **Command palette**, **Toggle left sidebar** and **Toggle right sidebar**. The sixth default slot opens **Settings** when you enable it. A command from a disabled or removed plugin appears unavailable until you choose a replacement.
 
 The command picker searches names and IDs. You can find the sidebar controls with **left sidebar**, **right sidebar**, **barra izquierda** or **barra derecha**. Both `app:toggle-left-sidebar` and `app-toggle-left-sidebar` work as search queries; the saved command ID uses the original colon.
+
+![Pip, Arden and Nova waving, shown at an enlarged integer pixel scale](docs/images/companions.png)
+
+## A small companion, a gentle pace
+
+Your NPC chooses its own little activities. It might wander, sit down, stretch, wave or doze. Bring the mouse closer and it pauses what it is doing to look at you. Its head follows the pointer in four directions: left, right, up-left and up-right.
+
+You can also **drag your companion** to move it. Lift it above the status bar and it raises both hands and fidgets a little. Release it and gravity brings it back to the floor, with a limited falling speed and no bounce. It lands softly, sits for **two seconds**, then carries on. A small movement threshold keeps ordinary clicks working; dropping the character never opens the command fan. Press Escape to release it while dragging.
+
+<img src="docs/images/drag-and-drop.gif" alt="Pip being picked up, dropped and resting briefly before carrying on in Obsidian" width="480">
+
+*Pick up your tiny friend, let go, and give it a moment to catch its breath.*
+
+With **Reduce motion** enabled, the character holds a still pose while lifted and returns directly to the floor when released, keeping the short seated pause.
+
+![Pip stretching at the bottom of an Obsidian workspace](docs/images/npc-in-workspace.png)
+
+*Pip taking a stretch while you work. This example uses the Lanternwood theme and an Infinite Calendar view; neither is required by Just Simple NPC.*
 
 ## Meet the companions
 
