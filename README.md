@@ -109,6 +109,8 @@ You can load your own character from a **PNG sprite sheet saved inside your vaul
 
 Attach your character image and a filled template to ChatGPT or another image-generation tool, paste the prompt, then save the resulting PNG in your vault. In **Settings → Just Simple NPC → Custom companion**, choose the sheet, give it a name and select **Use this companion**. Review all thirteen actions in the animated gallery. Pip, Arden and Nova remain available from their cards.
 
+<img src="docs/images/custom-npc-workflow.png" alt="Custom NPC workflow: a character reference and prompt, the generated sprite sheet, and Rue running in Obsidian with favorite command bubbles" width="960">
+
 <img src="docs/images/custom-settings.png" alt="Custom companion settings with a selected PNG, name, transparency options and animated preview" width="640">
 
 The format is **8 × 8 cells**, each **16 × 24 logical pixels**, with 60 required frames and four reserved cells. Native **128 × 192** sheets and whole-number enlargements such as **1024 × 1536** are accepted. The importer checks dimensions and required cells, keeps real transparency or removes a solid background, and reports the cell to repair when possible. A painted checkerboard is rejected. Generated poses still need a visual review.
