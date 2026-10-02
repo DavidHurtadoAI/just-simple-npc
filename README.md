@@ -16,6 +16,10 @@ Your NPC chooses its own little activities. It might wander, sit down, stretch, 
 
 You can also **drag your companion** to move it. Lift it above the status bar and it raises both hands and fidgets a little. Release it and gravity brings it back to the floor, with a limited falling speed and no bounce. It lands softly, sits for **two seconds**, then carries on. A small movement threshold keeps ordinary clicks working; dropping the character never opens the command fan. Press Escape to release it while dragging.
 
+![Pip being picked up, dropped and resting briefly before carrying on in Obsidian](docs/images/drag-and-drop.gif)
+
+*Pick up your tiny friend, let go, and give it a moment to catch its breath.*
+
 With **Reduce motion** enabled, the character holds a still pose while lifted and returns directly to the floor when released, keeping the short seated pause.
 
 ![Pip stretching at the bottom of an Obsidian workspace](docs/images/npc-in-workspace.png)
