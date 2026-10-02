@@ -1,6 +1,9 @@
 import { abbreviate, clamp, fanLayout, nextAction, CHARACTERS, type Action, type Brain, type Settings } from './core';
 import { drawSprite, lookDirection } from './sprite';
 import { FOOT_ROW, PixelSurface, pixelMetrics, snapToPixel, type PixelMetrics } from './pixel-grid';
+import { advanceFall, LANDING_SECONDS, type FallState } from './physics';
+
+interface Grab { pointerId: number; startX: number; startY: number; originX: number; originHeight: number; active: boolean }
 
 export interface FanCommand { id: string; name: string; label: string; icon?: string; available: boolean }
 export interface CompanionHost {
@@ -28,6 +31,11 @@ export class Companion {
   private lookSide = 1;
   private lastPaint = 0;
   private x = 240;
+  private height = 0;
+  private fall: FallState | null = null;
+  private landingRemaining = 0;
+  private grab: Grab | null = null;
+  private suppressClickUntil = 0;
   private floor = 0;
   private left = 18;
   private right = 800;
@@ -68,28 +76,35 @@ export class Companion {
     });
     this.listen(this.actor, 'pointerenter', () => {
       this.hovered = true; this.nearby = true; this.cancelClose();
-      if (this.win.performance.now() < this.ignoreHoverUntil) return;
+      if (this.grab || this.fall || this.landingRemaining > 0 || this.win.performance.now() < this.ignoreHoverUntil) return;
       this.clearHover();
       this.hoverTimer = this.win.setTimeout(() => { if (this.hovered) this.open(false); }, this.host.settings().hoverDelay);
     });
     this.listen(this.actor, 'pointerleave', () => { this.hovered = false; this.clearHover(); });
-    this.listen(this.actor, 'pointerdown', event => { if ((event as PointerEvent).button === 0) event.preventDefault(); });
+    this.listen(this.actor, 'pointerdown', event => this.startGrab(event as PointerEvent));
+    this.listen(this.doc, 'pointerup', event => this.releaseGrab(event as PointerEvent));
+    this.listen(this.doc, 'pointercancel', event => this.releaseGrab(event as PointerEvent));
+    this.listen(this.actor, 'lostpointercapture', event => this.releaseGrab(event as PointerEvent));
     this.listen(this.actor, 'click', event => {
+      if ((event as MouseEvent).detail !== 0 && this.win.performance.now() < this.suppressClickUntil) { event.preventDefault(); return; }
+      if (this.grab || this.fall || this.landingRemaining > 0) return;
       if (!this.opened) this.open((event as MouseEvent).detail === 0);
       else { this.pinned = true; if ((event as MouseEvent).detail === 0) this.focusFirst(); }
     });
-    this.listen(this.actor, 'contextmenu', event => { event.preventDefault(); this.close(false); this.host.configure(); });
+    this.listen(this.actor, 'contextmenu', event => { event.preventDefault(); if (!this.grab?.active) { this.close(false); this.host.configure(); } });
     this.listen(this.actor, 'focus', () => { this.focused = true; });
     this.listen(this.actor, 'blur', () => { this.focused = false; });
     this.listen(this.fan, 'pointerenter', () => this.cancelClose());
     this.listen(this.fan, 'keydown', event => this.onMenuKey(event as KeyboardEvent));
     this.listen(this.doc, 'keydown', event => {
+      if (this.grab && (event as KeyboardEvent).key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.releaseGrab(); return; }
       if (this.opened && (event as KeyboardEvent).key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.close(true); }
     }, true);
     this.listen(this.win, 'resize', () => { this.measure(); this.place(); if (this.opened) this.layoutFan(); });
-    this.listen(this.win, 'blur', () => { this.pointer = { x: -9999, y: -9999 }; this.close(false); this.clearHover(); });
-    this.listen(this.doc, 'visibilitychange', () => { if (this.doc.hidden) { this.close(false); this.clearHover(); } this.lastFrame = 0; });
-    this.listen(this.motion, 'change', () => { this.lastPaint = 0; });
+    this.listen(this.win, 'blur', () => { this.releaseGrab(); this.pointer = { x: -9999, y: -9999 }; this.close(false); this.clearHover(); });
+    this.listen(this.win, 'focus', () => { this.lastFrame = 0; });
+    this.listen(this.doc, 'visibilitychange', () => { if (this.doc.hidden) { this.releaseGrab(); this.close(false); this.clearHover(); } this.lastFrame = 0; });
+    this.listen(this.motion, 'change', () => { if (this.motion.matches && this.fall) this.land(); this.lastPaint = 0; });
     this.frame = this.win.requestAnimationFrame(time => this.tick(time));
   }
 
@@ -107,20 +122,63 @@ export class Companion {
     this.floor = rect && rect.height > 0 ? rect.top + 1 : this.win.innerHeight - 9;
     this.left = 18; this.right = Math.max(this.left, this.win.innerWidth - this.actorWidth() - 18);
     this.x = clamp(this.x, this.left, this.right);
+    this.height = clamp(this.height, 0, this.maxLift());
+    if (this.fall) this.fall.height = this.height;
+  }
+  private maxLift(): number {
+    const pad = (Math.max(44, this.metrics.height) - this.metrics.height) / 2;
+    return Math.max(0, this.floor - FOOT_ROW * this.metrics.cell - pad - 8);
   }
   private place(): void {
     const { width, height: imageHeight, cell, ratio } = this.metrics;
     const height = Math.max(44, imageHeight), topPad = (height - imageHeight) / 2;
-    const actorLeft = snapToPixel(this.x, ratio), actorTop = snapToPixel(this.floor - FOOT_ROW * cell - topPad, ratio);
+    const actorLeft = snapToPixel(this.x, ratio), actorTop = snapToPixel(this.floor - this.height - FOOT_ROW * cell - topPad, ratio);
     this.actor.style.width = `${this.actorWidth()}px`; this.actor.style.height = `${height}px`;
     this.canvas.style.left = `${snapToPixel(actorLeft + (this.actorWidth() - width) / 2, ratio) - actorLeft}px`;
     this.canvas.style.top = `${snapToPixel(actorTop + topPad, ratio) - actorTop}px`;
     this.actor.style.transform = `translate(${actorLeft}px, ${actorTop}px)`;
     const name = CHARACTERS.find(character => character.id === this.host.settings().character)!.name;
-    this.actor.setAttribute('aria-label', `${name} — favorite commands`); this.actor.title = `${name} · hover for your commands`;
+    this.actor.setAttribute('aria-label', `${name} — drag to move, hover for favorite commands`); this.actor.title = `${name} · drag to move · hover for your commands`;
   }
   private actorWidth(): number { return Math.max(40, this.metrics.width); }
+  private startGrab(event: PointerEvent): void {
+    if (event.button !== 0 || this.grab || this.destroyed) return;
+    event.preventDefault(); this.clearHover(); this.cancelClose();
+    this.grab = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
+      originX: this.x, originHeight: this.height, active: false };
+    // Document listeners also handle older hosts and synthetic test pointers.
+    try { this.actor.setPointerCapture(event.pointerId); } catch { /* No active pointer to capture. */ }
+  }
+  private releaseGrab(event?: PointerEvent): void {
+    const grab = this.grab;
+    if (!grab || event && event.pointerId !== grab.pointerId) return;
+    this.grab = null; this.root.dataset.dragging = 'false';
+    if (this.actor.hasPointerCapture(grab.pointerId)) this.actor.releasePointerCapture(grab.pointerId);
+    if (!grab.active) return;
+    this.suppressClickUntil = this.win.performance.now() + 600;
+    this.hovered = false; this.clearHover(); this.ignoreHoverUntil = this.win.performance.now() + 600;
+    if (this.motion.matches || this.height === 0) this.land();
+    else this.fall = { height: this.height, velocity: 0 };
+    this.lastPaint = 0;
+  }
+  private land(): void {
+    this.fall = null; this.height = 0; this.landingRemaining = LANDING_SECONDS;
+    this.lastPaint = 0; this.place();
+  }
   private onPointer(event: PointerEvent): void {
+    if (this.grab && event.pointerId === this.grab.pointerId) {
+      this.pointer = { x: event.clientX, y: event.clientY };
+      const dx = event.clientX - this.grab.startX, dy = event.clientY - this.grab.startY;
+      if (!this.grab.active && Math.hypot(dx, dy) >= 6) {
+        this.grab.active = true; this.close(false); this.fall = null; this.landingRemaining = 0;
+        this.root.dataset.dragging = 'true'; this.lastPaint = 0;
+      }
+      if (this.grab.active) {
+        event.preventDefault(); this.x = clamp(this.grab.originX + dx, this.left, this.right);
+        this.height = clamp(this.grab.originHeight - dy, 0, this.maxLift()); this.place();
+      }
+      return;
+    }
     if (event.pointerType === 'touch') return;
     this.pointer = { x: event.clientX, y: event.clientY };
     this.updateAttention();
@@ -133,7 +191,7 @@ export class Companion {
   }
   private updateAttention(): void {
     const dx = this.pointer.x - (this.x + this.actorWidth() / 2);
-    const dy = this.pointer.y - (this.floor - 17 * this.metrics.cell);
+    const dy = this.pointer.y - (this.floor - this.height - 17 * this.metrics.cell);
     const distance = Math.hypot(dx, dy);
     const approaching = distance < this.host.settings().proximity;
     if (approaching || this.hovered || this.focused || this.opened) this.attentionUntil = this.win.performance.now() + 750;
@@ -148,7 +206,14 @@ export class Companion {
     if (active) {
       this.elapsed += dt;
       this.updateAttention();
-      if (!this.nearby && !this.motion.matches) {
+      if (!this.grab && this.fall) {
+        this.fall = advanceFall(this.fall, dt); this.height = this.fall.height;
+        if (this.height === 0) this.land();
+        this.place();
+      } else if (!this.grab && this.landingRemaining > 0) {
+        this.landingRemaining = Math.max(0, this.landingRemaining - dt);
+        if (this.landingRemaining === 0) this.brain = { action: 'idle', remaining: 1.2, destination: this.x, direction: this.brain.direction };
+      } else if (!this.grab && !this.nearby && !this.motion.matches) {
         this.brain.remaining -= dt;
         if (this.brain.remaining <= 0) this.brain = nextAction(this.x, this.left, this.right);
         if (this.brain.action === 'walk') {
@@ -160,12 +225,13 @@ export class Companion {
         }
       }
     }
-    const action = this.opened ? 'offer' : this.nearby ? 'watch' : this.motion.matches ? 'idle' : this.brain.action;
+    const action = this.grab?.active ? this.height > 0 ? 'held' : 'idle' : this.fall ? 'fall'
+      : this.landingRemaining > 0 ? 'land' : this.opened ? 'offer' : this.nearby ? 'watch' : this.motion.matches ? 'idle' : this.brain.action;
     if (action !== this.lastAction) { this.lastAction = action; this.actionElapsed = 0; }
     else if (active) this.actionElapsed += dt;
     if ((active && time - this.lastPaint >= 80) || !this.lastPaint) {
       const gazeX = (this.pointer.x - this.x - this.actorWidth() / 2) / 40;
-      const gazeY = (this.pointer.y - this.floor + 17 * this.metrics.cell) / (20 * this.metrics.cell);
+      const gazeY = (this.pointer.y - this.floor + this.height + 17 * this.metrics.cell) / (20 * this.metrics.cell);
       if (Math.abs(gazeX) > .12) this.lookSide = Math.sign(gazeX);
       this.root.dataset.action = action;
       this.root.dataset.character = this.host.settings().character;
@@ -180,7 +246,7 @@ export class Companion {
   }
 
   open(keyboard = false): void {
-    if (this.destroyed) return;
+    if (this.destroyed || this.grab || this.fall || this.landingRemaining > 0) return;
     this.clearHover(); this.cancelClose();
     if (!this.opened) this.previousFocus = this.doc.activeElement instanceof this.win.HTMLElement ? this.doc.activeElement : null;
     this.opened = true; this.pinned = keyboard; this.nearby = true; this.lastPaint = 0;
@@ -259,6 +325,7 @@ export class Companion {
     this.ignoreHoverUntil = this.win.performance.now() + 400;
   }
   recall(anchor?: HTMLElement): void {
+    this.releaseGrab(); this.fall = null; this.height = 0; this.landingRemaining = 0;
     this.close(false); this.measure();
     this.x = clamp(anchor ? anchor.getBoundingClientRect().left - this.actorWidth() / 2 : this.win.innerWidth * .45, this.left, this.right);
     this.brain = { action: 'wave', remaining: 3, direction: 1, destination: this.x }; this.place(); this.lastPaint = 0;
@@ -271,6 +338,7 @@ export class Companion {
     }
   }
   destroy(): void {
+    this.releaseGrab();
     this.destroyed = true; this.win.cancelAnimationFrame(this.frame); this.clearHover(); this.cancelClose();
     for (const dispose of this.disposers) dispose(); this.root.remove();
   }

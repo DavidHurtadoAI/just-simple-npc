@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { DEFAULTS, normalizeSettings, abbreviate, fanLayout, nextAction, ACTIONS } from '../src/core.ts';
 import { drawSprite, HEADS, PALETTES, lookDirection, wavePhase } from '../src/sprite.ts';
 import { pixelMetrics, snapToPixel } from '../src/pixel-grid.ts';
+import { advanceFall, GRAVITY, MAX_FALL_SPEED, LANDING_SECONDS } from '../src/physics.ts';
+import { searchCommands } from '../src/command-search.ts';
 
 test('settings recover safely from old, partial or corrupt saved data', () => {
   assert.deepEqual(normalizeSettings(null), DEFAULTS);
@@ -103,6 +105,53 @@ test('autonomous actions always use bounded destinations and finite durations', 
     assert.ok(action.destination >= 18 && action.destination <= 820);
     assert.ok(action.remaining >= 2.5 && action.remaining <= 17);
     assert.ok(ACTIONS.some(item => item.id === action.action));
-    assert.ok(!['watch', 'offer'].includes(action.action));
+    assert.ok(!['watch', 'offer', 'held', 'fall', 'land'].includes(action.action));
   }
+});
+
+test('fall accelerates from rest and reaches the floor without bouncing or overshooting', () => {
+  const first = advanceFall({ height: 300, velocity: 0 }, .1);
+  const second = advanceFall(first, .1);
+  assert.equal(first.velocity, GRAVITY * .1);
+  assert.ok(first.height - second.height > 300 - first.height);
+  let state = { height: 900, velocity: 0 };
+  for (let i = 0; i < 180; i++) {
+    const previous = state.height; state = advanceFall(state, 1 / 60);
+    assert.ok(state.height >= 0 && state.height <= previous);
+    assert.ok(state.velocity >= 0 && state.velocity <= MAX_FALL_SPEED);
+  }
+  assert.deepEqual(state, { height: 0, velocity: 0 });
+  assert.deepEqual(advanceFall(state, .1), state);
+  assert.equal(LANDING_SECONDS, 2);
+});
+
+test('fall timing is independent of display refresh rate, including the speed limit', () => {
+  for (const duration of [.3, .8]) {
+    const expected = advanceFall({ height: 1500, velocity: 0 }, duration);
+    for (const frames of [30, 60, 120]) {
+      let state = { height: 1500, velocity: 0 };
+      for (let i = 0; i < frames; i++) state = advanceFall(state, duration / frames);
+      assert.ok(Math.abs(state.height - expected.height) < 1e-8);
+      assert.ok(Math.abs(state.velocity - expected.velocity) < 1e-8);
+    }
+  }
+  assert.deepEqual(advanceFall({ height: 250, velocity: 20 }, NaN), { height: 250, velocity: 20 });
+});
+
+test('sidebar commands can be found by names, pasted IDs, punctuation variants and localized words', () => {
+  const commands = [
+    { id: 'app:toggle-left-sidebar', name: 'Toggle left sidebar' },
+    { id: 'app:toggle-right-sidebar', name: 'Toggle right sidebar' },
+    { id: 'my-plugin:toggle-left-sidebar-details', name: 'Details' },
+    { id: 'other:search', name: 'Résumé search' }
+  ];
+  for (const query of ['app:toggle-left-sidebar', 'app-toggle-left-sidebar', '`app:toggle-left-sidebar`', 'APP_TOGGLE_LEFT_SIDEBAR', 'left sidebar', 'barra izquierda', 'panel izquierdo']) {
+    assert.equal(searchCommands(commands, query)[0].id, 'app:toggle-left-sidebar', query);
+  }
+  for (const query of ['app-toggle-right-sidebar', 'right sidebar', 'barra derecha', 'panel derecho']) {
+    assert.equal(searchCommands(commands, query)[0].id, 'app:toggle-right-sidebar', query);
+  }
+  assert.equal(searchCommands(commands, 'resume')[0].id, 'other:search');
+  assert.deepEqual(searchCommands(commands, 'does not exist'), []);
+  assert.equal(searchCommands(commands, '').length, commands.length);
 });

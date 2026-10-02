@@ -14,6 +14,10 @@
 
 Your NPC chooses its own little activities. It might wander, sit down, stretch, wave or doze. Bring the mouse closer and it pauses what it is doing to look at you. Its head follows the pointer in four directions: left, right, up-left and up-right.
 
+You can also **drag your companion** to move it. Lift it above the status bar and it raises both hands and fidgets a little. Release it and gravity brings it back to the floor, with a limited falling speed and no bounce. It lands softly, sits for **two seconds**, then carries on. A small movement threshold keeps ordinary clicks working; dropping the character never opens the command fan. Press Escape to release it while dragging.
+
+With **Reduce motion** enabled, the character holds a still pose while lifted and returns directly to the floor when released, keeping the short seated pause.
+
 ![Pip stretching at the bottom of an Obsidian workspace](docs/images/npc-in-workspace.png)
 
 *Pip taking a stretch while you work. This example uses the Lanternwood theme and an Infinite Calendar view; neither is required by Just Simple NPC.*
@@ -32,6 +36,8 @@ Hover over the character to open a fan of speech bubbles. Click a bubble to run 
 - Editor focus and selection are restored before the selected command runs.
 
 The default five commands are **Quick switcher**, **Search**, **Command palette**, **Toggle left sidebar** and **Toggle right sidebar**. The sixth default slot opens **Settings** when you enable it. A command from a disabled or removed plugin appears unavailable until you choose a replacement.
+
+The command picker searches names and IDs. You can find the sidebar controls with **left sidebar**, **right sidebar**, **barra izquierda** or **barra derecha**. Both `app:toggle-left-sidebar` and `app-toggle-left-sidebar` work as search queries; the saved command ID uses the original colon.
 
 ## Meet the companions
 
@@ -95,7 +101,7 @@ The settings use Obsidian's native declarative API and appear in its settings se
 
 ## What can the NPC do?
 
-The settings include a **read-only gallery with animated previews of all ten behaviors** for the selected character. Individual actions are not configurable in this version.
+The settings include a **read-only gallery with animated previews of all thirteen behaviors** for the selected character. Individual actions are not configurable in this version.
 
 | Action | Behavior |
 | --- | --- |
@@ -109,8 +115,11 @@ The settings include a **read-only gallery with animated previews of all ten beh
 | **Doze** | Sit, close the eyes and drift off for a moment. |
 | **Follow the mouse** | Pause and turn the head toward the pointer. |
 | **Offer commands** | Open the fan and stay still while you choose. |
+| **Picked up** | Raise both hands and fidget while lifted off the floor. |
+| **Fall gently** | Accelerate toward the floor after release, with a limited falling speed. |
+| **Catch a breath** | Land softly and sit for two seconds before carrying on. |
 
-The first eight are autonomous activities. The last two respond to your pointer or interaction. The NPC pauses while Obsidian is in the background and respects the system's **Reduce motion** preference.
+The first eight are autonomous activities. The other five respond to your pointer or interaction. The NPC pauses while Obsidian is in the background and respects the system's **Reduce motion** preference.
 
 ## Keyboard access
 
@@ -138,7 +147,7 @@ npm ci
 npm run check
 ```
 
-`check` runs the official Obsidian ESLint rules with zero warnings, a CSS check prohibiting `!important`, strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement and autonomous movement bounds. GitHub Actions runs the same checks on pushes and pull requests.
+`check` runs the official Obsidian ESLint rules with zero warnings, a CSS check prohibiting `!important`, strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement, autonomous movement bounds, falling physics at different refresh rates and command searches. GitHub Actions runs the same checks on pushes and pull requests.
 
 Version tags run a separate [release workflow](.github/workflows/release.yml). It checks that the tag, package, manifest and minimum-version mapping agree, builds from that tagged source, and creates GitHub artifact attestations for `main.js`, `manifest.json` and `styles.css`. It verifies provenance before publishing, then downloads the release and checks both byte equality and attestations again.
 
@@ -156,7 +165,9 @@ The main pieces are:
 
 - `src/sprite.ts`: original pixel matrices, palettes and animation poses.
 - `src/pixel-grid.ts`: integer enlargement and physical-pixel alignment.
-- `src/companion.ts`: wandering, pointer attention and the command fan.
+- `src/companion.ts`: wandering, dragging, pointer attention and the command fan.
+- `src/physics.ts`: acceleration, falling speed limit and landing timing.
+- `src/command-search.ts`: command matching and sidebar search aliases.
 - `src/core.ts`: settings, behavior choices and fan geometry.
 - `src/main.ts`: Obsidian lifecycle and command dispatch.
 - `src/settings.ts`: searchable settings, command selection and animated previews.

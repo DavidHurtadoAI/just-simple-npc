@@ -57,14 +57,15 @@ export function drawSprite(ctx: CanvasRenderingContext2D, pose: SpritePose): voi
   ctx.clearRect(0, 0, 16, 24); ctx.imageSmoothingEnabled = false;
   const character = pose.character ?? 'pip', palette = PALETTES[character];
   const time = pose.reduced ? 1 : pose.time, local = pose.reduced ? .8 : pose.actionTime ?? time;
-  const sit = pose.action === 'sit' || pose.action === 'sleep', inspect = pose.action === 'inspect';
+  const landing = pose.action === 'land', airborne = pose.action === 'held' || pose.action === 'fall';
+  const sit = pose.action === 'sit' || pose.action === 'sleep' || landing, inspect = pose.action === 'inspect';
   const walk = pose.action === 'walk', step = walk ? Math.floor(time * 7) % 6 : 0;
-  const bob = sit ? 3 : inspect ? 2 : walk ? [0, -1, -1, 0, -1, -1][step] : 0;
+  const bob = sit ? 3 + (landing && !pose.reduced && local < .16 ? 1 : 0) : inspect ? 2 : walk ? [0, -1, -1, 0, -1, -1][step] : 0;
   const watching = pose.action === 'watch' || pose.action === 'offer';
   const look = watching ? lookDirection(pose.gazeX, pose.gazeY, pose.direction) : pose.action === 'look'
     ? lookDirection(Math.sin(local * 1.4), Math.sin(local * .9) < -.25 ? -1 : 0, pose.direction)
     : pose.direction < 0 && walk ? 'left' : 'right';
-  const blink = pose.action === 'sleep' || (!pose.reduced && time % 5.3 > 5.13);
+  const blink = pose.action === 'sleep' || (!airborne && !pose.reduced && time % 5.3 > 5.13);
   const paint = (grid: Grid, x: number, y: number, mirror = false, eyes = false) => {
     for (let row = 0; row < grid.length; row++) for (let col = 0; col < grid[row].length; col++) {
       let pixel = grid[row][col]; if (pixel === '.') continue;
@@ -76,6 +77,11 @@ export function drawSprite(ctx: CanvasRenderingContext2D, pose: SpritePose): voi
   if (sit) {
     paint(['.ooooooo.', 'otTTtttto', 'oooo.oooo'], 4, 19);
     paint(['oooo', 'oTbo', 'oooo'], 2, 20); paint(['oooo', 'oTbo', 'oooo'], 11, 20);
+  } else if (airborne) {
+    const kick = pose.reduced ? 0 : Math.floor(local * 4) % 2;
+    paint(['oto', 'oTo', 'obo', 'ooo'], 5 + kick, 18);
+    paint(['oto', 'oto', 'obo', 'ooo'], 9 - kick, 18);
+    paint(['Tboo'], 4 + kick, 21); paint(['oobT'], 9 - kick, 21);
   } else {
     const stride = walk ? [0, -1, -1, 0, 1, 1][step] : 0;
     paint(['oto', 'oTo', 'oto', 'obo', 'ooo'], 5 + stride, 18);
@@ -85,7 +91,11 @@ export function drawSprite(ctx: CanvasRenderingContext2D, pose: SpritePose): voi
   paint(BODIES[character], 5, 11 + bob);
   const swing = walk ? [0, 0, 1, 0, -1, -1][step] : 0;
   const wave = wavePhase(local);
-  if (pose.action === 'stretch' && local % 3.2 > .35 && local % 3.2 < 2.6) {
+  if (airborne) {
+    const fidget = pose.reduced ? 0 : Math.floor(local * 5) % 2;
+    paint(fidget ? WAVE_OUT : WAVE_IN, 1, 7 - fidget, true);
+    paint(fidget ? WAVE_IN : WAVE_OUT, 11, 6 + fidget);
+  } else if (pose.action === 'stretch' && local % 3.2 > .35 && local % 3.2 < 2.6) {
     paint(STRETCH, 1, 8 + bob); paint(STRETCH, 11, 8 + bob, true);
   } else {
     paint(ARM, 3, 13 + bob + swing);

@@ -4,16 +4,16 @@ import { catalog } from './main';
 import { ACTIONS, CHARACTERS, SIZES, normalizeSettings, type Action, type Character } from './core';
 import { drawSprite } from './sprite';
 import { PixelSurface, pixelMetrics } from './pixel-grid';
+import { searchCommands } from './command-search';
 
 class CommandPicker extends SuggestModal<Command> {
   private commands: Command[];
   constructor(app: App, private choose: (command: Command) => void) {
-    super(app); this.commands = catalog(app); this.setPlaceholder('Find a command…');
+    super(app); this.commands = catalog(app); this.setPlaceholder('Find a command by name or ID…');
     this.emptyStateText = 'No matching commands'; this.limit = 80;
   }
   getSuggestions(query: string): Command[] {
-    const words = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    return this.commands.filter(command => words.every(word => `${command.name} ${command.id}`.toLocaleLowerCase().includes(word)));
+    return searchCommands(this.commands, query);
   }
   renderSuggestion(command: Command, el: HTMLElement): void {
     el.createDiv({ text: command.name }); el.createDiv({ text: command.id, cls: 'lnp-command-id' });
@@ -137,7 +137,7 @@ export class NpcSettings extends PluginSettingTab {
       }]
     }, {
       name: 'NPC actions · read-only',
-      desc: 'Live previews of all ten behaviors. Individual behaviors will be configurable in a future version.',
+      desc: `Live previews of all ${ACTIONS.length} behaviors. Individual behaviors will be configurable in a future version.`,
       aliases: ACTIONS.map(action => action.name),
       render: setting => {
         setting.setHeading(); setting.settingEl.addClass('lnp-gallery-setting');

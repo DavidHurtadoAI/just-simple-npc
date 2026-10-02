@@ -1,4 +1,4 @@
-export type Action = 'walk' | 'idle' | 'look' | 'sit' | 'stretch' | 'wave' | 'inspect' | 'sleep' | 'watch' | 'offer';
+export type Action = 'walk' | 'idle' | 'look' | 'sit' | 'stretch' | 'wave' | 'inspect' | 'sleep' | 'watch' | 'offer' | 'held' | 'fall' | 'land';
 export type Character = 'pip' | 'arden' | 'nova';
 export const CHARACTERS: { id: Character; name: string; description: string }[] = [
   { id: 'pip', name: 'Pip', description: 'Copper hair, a moss sweater and a little satchel.' },
@@ -17,7 +17,10 @@ export const ACTIONS: { id: Action; name: string; description: string }[] = [
   { id: 'inspect', name: 'Investigate', description: 'Lean down to examine something by the feet.' },
   { id: 'sleep', name: 'Doze', description: 'Sit, close the eyes and drift off for a moment.' },
   { id: 'watch', name: 'Follow the mouse', description: 'Stop and turn the head toward the pointer: left, right, up-left or up-right.' },
-  { id: 'offer', name: 'Offer commands', description: 'Open the command fan on hover; stay still while you choose.' }
+  { id: 'offer', name: 'Offer commands', description: 'Open the command fan on hover; stay still while you choose.' },
+  { id: 'held', name: 'Picked up', description: 'Raise both hands and fidget a little when lifted off the floor.' },
+  { id: 'fall', name: 'Fall gently', description: 'Accelerate toward the floor after being released, with a limited falling speed.' },
+  { id: 'land', name: 'Catch a breath', description: 'Land softly, sit for two seconds, then carry on.' }
 ];
 
 export interface Slot { command: string; label: string }

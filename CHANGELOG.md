@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0
+
+- Drag the companion to pick it up and move it; all three characters raise and fidget their hands while lifted.
+- Release to fall with gravity and a limited speed, land without bouncing, and sit for two seconds before resuming normal behavior.
+- Keep clicks and hover commands separate from dragging; handle pointer capture, cancellation, Escape, window changes and background pause.
+- Respect reduced motion with a still lifted pose and an immediate return to the floor.
+- Add the three new interaction behaviors to the read-only settings gallery.
+- Make the command picker accept names, IDs and colon/hyphen/underscore variants, with sidebar search aliases and exact ID matches first.
+- Include registered commands that Obsidian's listed catalog may omit, without duplicates.
+- Add regression tests for acceleration, floor contact, refresh-rate independence and sidebar command searches.
+
 ## 0.5.1
 
 - Use **Medium** as the default character size for new installations. Existing saved sizes stay unchanged.
