@@ -12,7 +12,7 @@
 
 Hover over the character to open a fan of speech bubbles. Click a bubble to run that command in your current Obsidian context. You can also click the character to open the fan immediately.
 
-![Five favorite commands arranged in speech bubbles above Pip](docs/images/command-fan.png)
+<img src="docs/images/command-fan.png" alt="Five favorite commands arranged in speech bubbles above Pip" width="480">
 
 - Choose **up to six fixed commands** from Obsidian or enabled plugins. Five slots are shown by default.
 - Keep them in your preferred order. Just Simple NPC does not rank commands or track how often you use them.
