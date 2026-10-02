@@ -1,5 +1,5 @@
-import { abbreviate, clamp, fanLayout, nextAction, CHARACTERS, type Action, type Brain, type Settings } from './core';
-import { drawSprite, lookDirection } from './sprite';
+import { abbreviate, clamp, fanLayout, nextAction, type Action, type Brain, type Settings } from './core';
+import { lookDirection, type SpritePose } from './sprite';
 import { FOOT_ROW, PixelSurface, pixelMetrics, snapToPixel, type PixelMetrics } from './pixel-grid';
 import { advanceFall, LANDING_SECONDS, type FallState } from './physics';
 
@@ -8,6 +8,8 @@ interface Grab { pointerId: number; startX: number; startY: number; originX: num
 export interface FanCommand { id: string; name: string; label: string; icon?: string; available: boolean }
 export interface CompanionHost {
   settings(): Settings;
+  name(): string;
+  paint(context: CanvasRenderingContext2D, pose: SpritePose): void;
   commands(): FanCommand[];
   execute(id: string): void;
   configure(): void;
@@ -137,7 +139,7 @@ export class Companion {
     this.canvas.style.left = `${snapToPixel(actorLeft + (this.actorWidth() - width) / 2, ratio) - actorLeft}px`;
     this.canvas.style.top = `${snapToPixel(actorTop + topPad, ratio) - actorTop}px`;
     this.actor.style.transform = `translate(${actorLeft}px, ${actorTop}px)`;
-    const name = CHARACTERS.find(character => character.id === this.host.settings().character)!.name;
+    const name = this.host.name();
     this.actor.setAttribute('aria-label', `${name} — drag to move, hover for favorite commands`); this.actor.title = `${name} · drag to move · hover for your commands`;
   }
   private actorWidth(): number { return Math.max(40, this.metrics.width); }
@@ -236,7 +238,7 @@ export class Companion {
       this.root.dataset.action = action;
       this.root.dataset.character = this.host.settings().character;
       this.root.dataset.look = lookDirection(gazeX, gazeY, this.lookSide);
-      drawSprite(this.surface.context, { action, character: this.host.settings().character, time: this.elapsed, actionTime: this.actionElapsed,
+      this.host.paint(this.surface.context, { action, character: this.host.settings().character === 'custom' ? 'pip' : this.host.settings().character as SpritePose['character'], time: this.elapsed, actionTime: this.actionElapsed,
         direction: action === 'watch' || action === 'offer' ? this.lookSide : this.brain.direction,
         gazeX, gazeY, reduced: this.motion.matches });
       this.surface.present();

@@ -1,3 +1,4 @@
+import type { BackgroundMode } from './sheet-pixels';
 export type Action = 'walk' | 'idle' | 'look' | 'sit' | 'stretch' | 'wave' | 'inspect' | 'sleep' | 'watch' | 'offer' | 'held' | 'fall' | 'land';
 export type Character = 'pip' | 'arden' | 'nova';
 export const CHARACTERS: { id: Character; name: string; description: string }[] = [
@@ -24,10 +25,10 @@ export const ACTIONS: { id: Action; name: string; description: string }[] = [
 ];
 
 export interface Slot { command: string; label: string }
-export interface Settings { count: number; character: Character; scale: number; speed: number; proximity: number; hoverDelay: number; slots: Slot[] }
+export interface Settings { count: number; character: Character | 'custom'; customPath: string; customName: string; customBackground: BackgroundMode; scale: number; speed: number; proximity: number; hoverDelay: number; slots: Slot[] }
 
 export const DEFAULTS: Settings = {
-  count: 5, character: 'pip', scale: 1.5, speed: 24, proximity: 150, hoverDelay: 180,
+  count: 5, character: 'pip', customPath: '', customName: 'My companion', customBackground: 'auto', scale: 1.5, speed: 24, proximity: 150, hoverDelay: 180,
   slots: [
     { command: 'switcher:open', label: 'Quick switcher' },
     { command: 'global-search:open', label: 'Search' },
@@ -47,7 +48,11 @@ export function normalizeSettings(raw: unknown): Settings {
   const scale = numeric(data.scale, DEFAULTS.scale, 1, 2);
   return {
     count: Math.round(numeric(data.count, DEFAULTS.count, 1, 6)),
-    character: CHARACTERS.some(character => character.id === data.character) ? data.character! : DEFAULTS.character,
+    character: data.character === 'custom' && typeof data.customPath === 'string' && data.customPath.trim() ? 'custom'
+      : CHARACTERS.some(character => character.id === data.character) ? data.character! : DEFAULTS.character,
+    customPath: typeof data.customPath === 'string' ? data.customPath.trim().slice(0, 1024) : '',
+    customName: typeof data.customName === 'string' && data.customName.trim() ? data.customName.trim().slice(0, 40) : DEFAULTS.customName,
+    customBackground: ['transparent', 'auto', 'magenta'].includes(data.customBackground ?? '') ? data.customBackground! : DEFAULTS.customBackground,
     scale: SIZES.reduce((best, size) => Math.abs(size.scale - scale) < Math.abs(best - scale) ? size.scale : best, 2 as number),
     speed: numeric(data.speed, DEFAULTS.speed, 8, 48),
     proximity: numeric(data.proximity, DEFAULTS.proximity, 80, 240),

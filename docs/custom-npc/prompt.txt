@@ -1,0 +1,39 @@
+Create a complete, production-ready animation sprite sheet for Just Simple NPC.
+
+REFERENCE ROLES
+Image 1 is my character reference: use its identity, recognizable silhouette, hair, face, clothing and colors.
+Image 2 is pip-template.png (or arden-template.png / nova-template.png): use it ONLY for the animation poses, frame placement, proportions and pixel-art scale. Replace that character in every occupied frame with my character from Image 1.
+An optional Image 3, layout-guide.png, labels the cells. It is a technical map, not artwork to copy. Its text, colors and borders must not appear in the finished sheet.
+
+DELIVERABLE
+One PNG sprite sheet, exactly 1024 pixels wide by 1536 pixels high, with a real transparent alpha channel. It has 8 columns and 8 rows, no spacing, no outer margin, no labels and no visible grid. Each frame occupies exactly 128 × 192 output pixels. Do not rearrange, merge, crop, stretch or omit cells. Do not return a GIF, a character poster, a collage or a perspective mockup.
+
+PIXEL ART AND CONSISTENCY
+The logical frame is only 16 × 24 pixels, enlarged exactly 8 times. Draw with axis-aligned 8 × 8 output-pixel blocks. Every block must have one flat color and one opacity: fully opaque or fully transparent. No anti-aliasing, blur, gradients, painted checkerboards or translucent edge halos. Use attractive colored highlights, shadows and coherent clusters; the palette does not need to be tiny. Favor a readable face and silhouette over decorative detail. Simplify Image 1 to this genuine low-resolution grid rather than squeezing a detailed illustration into it.
+Keep the same head size, short neck, body proportions, clothing design, outline thickness and palette throughout all 60 occupied frames. Preserve the identity, apparent age and gender expression of Image 1. Keep the entire character, hands and feet inside each cell, with the four corner blocks transparent. Align grounded feet just above logical y=23: the bottom of a standing foot is output y=184 within its frame. Leave the last 8-pixel block row clear where possible. Body bobbing in walking frames may be one logical pixel. Sitting, bending and lifted legs may change the silhouette, but never move the cell origin or scale the character.
+Most poses face right. The plugin mirrors the walking frames when moving left. The four directional frames below turn the head and eyes while keeping the body consistent. They must clearly distinguish left, right, up-left and up-right. Do not substitute a straight upward stare for an upward diagonal view.
+
+EXACT ANIMATION MAP
+Columns are A through H from left to right. Rows are 1 through 8 from top to bottom. Follow this map exactly, using Image 2 to check placement:
+
+Row 1, A1–H1: WALK. Eight frames of one continuous, gentle walking loop facing right. Alternate feet and arms, include contact and passing poses, keep the ground baseline consistent. The last frame should connect naturally to the first.
+Row 2, A2–D2: IDLE. Four subtle resting frames: relaxed open eyes, a small breath, a blink, then relaxed open eyes. No wandering across the cell.
+Row 2, E2–H2: LOOK AROUND. Four poses in this exact order: head left, head right, head up-left, head up-right. Lift the chin and eyes visibly in the upward views.
+Row 3, A3–B3: SIT. Two calm seated poses, with feet in front and a small relaxed change in posture.
+Row 3, C3–H3: STRETCH. Six frames: arms down, arms rising, both arms raised, hold the stretch, arms lowering, return to rest. Keep hands clearly readable.
+Row 4, A4–H4: WAVE. Eight frames: prepare, raise one arm, show the open palm, wave outward, wave inward, wave outward again, lower the arm, return to rest. This must read as a friendly wave rather than a twitch.
+Row 5, A5–D5: INVESTIGATE. Four frames leaning down to look near the feet, a brief inspection, then easing back. No additional object is required.
+Row 5, E5–H5: DOZE. Four seated frames with eyes closed and a subtle breathing loop. Keep the figure visible in every frame.
+Row 6, A6–D6: FOLLOW THE MOUSE. Four attentive standing poses in this exact order: left, right, up-left, up-right. Turn the head clearly; do not rotate or relocate the whole figure.
+Row 6, E6–H6: OFFER COMMANDS. Four calm, welcoming poses in the same exact direction order: left, right, up-left, up-right. Do not draw menus, speech bubbles, command icons or text; the plugin creates those separately.
+Row 7, A7–D7: PICKED UP. Four frames with both hands raised, a slightly surprised expression, and a small alternating fidget of hands and bent feet. Cute and mildly startled, never distressed or hurt.
+Row 7, E7–H7: FALL. Four compatible airborne frames, hands raised and legs slightly tucked. Keep the figure at the same cell origin: the plugin supplies downward motion and gravity. Do not draw a trajectory, a floor, speed lines or impact effects.
+Row 8, A8–D8: LAND AND REST. Four frames: a small soft compression, easing into a seated pose, relaxing while seated, a settled seated pose. The final frame is held briefly. No violent impact, bounce, injury or flattened body.
+Row 8, E8–H8: RESERVED. Leave these four cells entirely transparent. Do not put a logo, title, palette, extra character or explanatory text there.
+
+TRANSPARENCY
+Use actual PNG alpha. Empty space must be transparent pixels, not white, black, gray or a drawing of a checkerboard. Opaque art pixels must keep their real colors, including white details. No floor, scenery, cast shadow, vignette, outline around the whole sheet or glow outside the character.
+If your image tool cannot provide real alpha, use ONE exact, completely uniform #FF00FF magenta background everywhere outside the character, including E8–H8. Do not use magenta in the character itself. Do not add texture, shadows, gradients or a checkerboard to that background. The plugin can remove this solid color. Prefer genuine alpha whenever available.
+
+FINAL CHECK
+Before delivering, check the 1024 × 1536 canvas, 8 × 8 grid, 128 × 192 cells, all 60 occupied cells, the four empty reserved cells, fixed character proportions, grounded-foot alignment, readable hands, all four head directions and the absence of text or grid lines. Check that empty space uses actual alpha if your tools can inspect the file; do not merely describe a painted background as transparent. Return the completed downloadable PNG.

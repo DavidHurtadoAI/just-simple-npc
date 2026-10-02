@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0
+
+- Import a custom NPC from a PNG sprite sheet inside the vault, with a name, animated preview and explicit activation.
+- Define the version 1 format: 8 × 8 cells, 16 × 24 logical pixels, 60 required frames covering all thirteen behaviors and four reserved cells.
+- Accept native 128 × 192 sheets and uniform integer enlargements, including 1024 × 1536; validate PNG headers, dimensions, size, frame contents and transparent corners before activation.
+- Preserve real alpha or remove an edge-connected solid background automatically or with explicit magenta keying. Reject painted checkerboards and preserve enclosed matching character details.
+- Keep mouse tracking, four head directions, command bubbles, crisp display scaling, dragging, gentle falling and reduced motion for custom characters.
+- Reload chosen sheets when edited, follow vault renames and fall back to Pip for missing or invalid files while retaining the saved selection. Forgetting a sheet leaves the PNG intact.
+- Ship downloadable Pip, Arden and Nova sheets, blank templates, labeled guides, the original Rue reference and a detailed image-generation prompt with transparency guidance.
+- Add reproducible sheet exports, importer regression tests and a screenshot of the custom companion settings.
+
 ## 0.6.0
 
 - Drag the companion to pick it up and move it; all three characters raise and fidget their hands while lifted.

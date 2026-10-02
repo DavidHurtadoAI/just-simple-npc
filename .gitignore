@@ -2,5 +2,6 @@ node_modules/
 main.js
 qa/
 *.zip
+!docs/custom-npc/creation-kit.zip
 *.log
 .npm-cache/
