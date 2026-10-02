@@ -17,8 +17,9 @@ function commandManager(app: App): CommandManager | null {
 export function catalog(app: App): Command[] {
   const manager = commandManager(app);
   if (!manager) return [];
-  return (typeof manager.listCommands === 'function' ? manager.listCommands() : Object.values(manager.commands))
-    .filter(command => typeof command.id === 'string' && typeof command.name === 'string')
+  const commands = [...Object.values(manager.commands), ...(typeof manager.listCommands === 'function' ? manager.listCommands() : [])];
+  return [...new Map(commands.filter(command => typeof command.id === 'string' && typeof command.name === 'string')
+    .map(command => [command.id, command])).values()]
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
