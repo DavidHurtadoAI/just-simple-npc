@@ -1,6 +1,11 @@
 .lnp-root {
   position: fixed;
-  inset: 0;
+  /* Obsidian marks body overlays no-drag; a full-window box blocks the title bar.
+     Anchor the absolutely positioned children without covering any drag region. */
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
   z-index: 40;
   pointer-events: none;
   --lnp-ink: var(--text-normal, #e7e6e1);
