@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+- Fix the Windows title bar becoming unresponsive to window dragging after maximizing Obsidian and restoring it down.
+- Give the NPC overlay a zero-size anchor instead of a full-window rectangle, so Obsidian's native non-draggable overlay rule cannot cover the title-bar drag regions.
+- Preserve the visible character, command bubbles, pointer interaction and pick-up/fall behavior in all three sizes.
+
 ## 0.7.0
 
 - Import a custom NPC from a PNG sprite sheet inside the vault, with a name, animated preview and explicit activation.

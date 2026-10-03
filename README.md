@@ -57,9 +57,11 @@ The artwork is drawn cell by cell on a **16 × 24 pixel grid**, with colored hig
 
 ## Install
 
-This version is distributed through GitHub releases. It has not been submitted to Obsidian's Community Plugins directory.
-
 Requires **Obsidian 1.13.0 or later** on desktop.
+
+In Obsidian, open **Settings → Community plugins → Browse**, search for **Just Simple NPC**, then install and enable it. To update an existing installation, use **Check for updates** in Community plugins and update Just Simple NPC.
+
+You can also install it manually from GitHub:
 
 1. Download **`main.js`, `manifest.json` and `styles.css`** from the [latest release](https://github.com/DavidHurtadoAI/just-simple-npc/releases/latest).
 2. Create a folder named `just-simple-npc` inside your vault's `.obsidian/plugins/` folder.
