@@ -76,10 +76,15 @@
 }
 .lnp-root button.lnp-bubble:hover, .lnp-root button.lnp-bubble:focus-visible {
   --lnp-line: var(--interactive-accent, #9dc3ac);
-  background: var(--background-modifier-hover, #343b38);
   outline: none;
 }
-.lnp-root button.lnp-bubble:hover::after, .lnp-root button.lnp-bubble:focus-visible::after { background: var(--background-modifier-hover, #343b38); }
+/* Composite translucent theme highlights over the solid bubble and tail fills. */
+.lnp-root button.lnp-bubble:hover,
+.lnp-root button.lnp-bubble:focus-visible,
+.lnp-root button.lnp-bubble:hover::after,
+.lnp-root button.lnp-bubble:focus-visible::after {
+  background-image: linear-gradient(var(--background-modifier-hover, #343b38), var(--background-modifier-hover, #343b38));
+}
 .lnp-root button.lnp-bubble:disabled { opacity: .45; cursor: default; }
 .lnp-command-icon { display: inline-flex; flex: 0 0 14px; width: 14px; height: 14px; align-items: center; justify-content: center; color: var(--text-accent, #a5c9b5); }
 .lnp-command-icon svg { width: 14px; height: 14px; }
