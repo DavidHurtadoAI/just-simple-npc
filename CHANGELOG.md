@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2
+
+- Keep command bubbles and their tails opaque on hover and keyboard focus when a theme supplies translucent hover colors, so note text underneath cannot show through.
+
 ## 0.7.1
 
 - Fix the Windows title bar becoming unresponsive to window dragging after maximizing Obsidian and restoring it down.
