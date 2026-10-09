@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.3
+
+Thanks to [u/gamarala_in_distress](https://www.reddit.com/user/gamarala_in_distress/) for asking ["does it drain resources on idle ?"](https://www.reddit.com/r/ObsidianMD/comments/1wuvon6/comment/pescsxd/). That question prompted a closer look at animation work and this performance update.
+
+- Replace continuous frame polling with a clock that sleeps between animation deadlines. Cancel pending companion animation when Obsidian is hidden or unfocused.
+- Update walking at 30 Hz and stationary behaviors at the sprite cadence, about 12.5 Hz. Keep direct pointer dragging and 60 Hz falling with the same gravity and landing pause.
+- Stop continuous companion animation when reduced motion leaves it at rest; pointer interaction wakes it as needed.
+- Write position, size, labels and state attributes only when their values change. Preserve crisp pixel alignment and the zero-size overlay that protects Windows title-bar dragging.
+- Share one settings animation clock per document. Paint only visible previews, allocate their surfaces on first visible paint, and release clocks, observers and listeners when settings close.
+- Add scheduling and preview tests covering 30, 60, 120 and 144 Hz displays, pause/resume, reduced motion and cleanup.
+
+### What idle means
+
+A visible companion still performs animation work while you are not typing: it walks, blinks and reacts to the pointer. This release reduces unnecessary work; it does not promise zero CPU while the character is animated. Its animation clock stops when the Obsidian window is hidden or unfocused. With reduced motion enabled, a resting companion has no continuous animation loop.
+
+### Verification
+
+All 26 tests, lint, TypeScript checks and the production build pass. In the same controlled 10-second walking test, update calls fell from 600 to 300 and DOM attribute writes from 1,980 to 300, while travel remained 240 CSS pixels. That comparison uses native DOM/canvas in an isolated document with a virtual 60 Hz clock: these are operation counts, not CPU or battery percentages. The actual Obsidian settings window animates only the visible previews through one shared clock and releases all preview groups on close. Dragging, the four head directions, command selection and fall timing were also checked.
+
 ## 0.7.2
 
 - Keep command bubbles and their tails opaque on hover and keyboard focus when a theme supplies translucent hover colors, so note text underneath cannot show through.

@@ -32,7 +32,9 @@ export class PixelSurface {
   resize(metrics: PixelMetrics): void {
     const width = SPRITE_WIDTH * metrics.physicalCell, height = SPRITE_HEIGHT * metrics.physicalCell;
     if (this.canvas.width !== width || this.canvas.height !== height) { this.canvas.width = width; this.canvas.height = height; }
-    this.canvas.style.width = `${metrics.width}px`; this.canvas.style.height = `${metrics.height}px`;
+    const cssWidth = `${metrics.width}px`, cssHeight = `${metrics.height}px`;
+    if (this.canvas.style.width !== cssWidth) this.canvas.style.width = cssWidth;
+    if (this.canvas.style.height !== cssHeight) this.canvas.style.height = cssHeight;
   }
   present(): void {
     this.output.imageSmoothingEnabled = false;
@@ -42,8 +44,10 @@ export class PixelSurface {
   /** Flex/grid layouts can also place previews between physical pixels. */
   align(ratio: number): void {
     const rect = this.canvas.getBoundingClientRect();
-    this.alignment.x += snapToPixel(rect.left, ratio) - rect.left;
-    this.alignment.y += snapToPixel(rect.top, ratio) - rect.top;
+    const dx = snapToPixel(rect.left, ratio) - rect.left, dy = snapToPixel(rect.top, ratio) - rect.top;
+    if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6) return;
+    this.alignment.x += dx;
+    this.alignment.y += dy;
     this.canvas.style.transform = `translate(${this.alignment.x}px, ${this.alignment.y}px)`;
   }
 }

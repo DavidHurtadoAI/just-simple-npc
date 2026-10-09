@@ -2,6 +2,7 @@ import { abbreviate, clamp, fanLayout, nextAction, type Action, type Brain, type
 import { lookDirection, type SpritePose } from './sprite';
 import { FOOT_ROW, PixelSurface, pixelMetrics, snapToPixel, type PixelMetrics } from './pixel-grid';
 import { advanceFall, LANDING_SECONDS, type FallState } from './physics';
+import { AnimationLoop } from './animation';
 
 interface Grab { pointerId: number; startX: number; startY: number; originX: number; originHeight: number; active: boolean }
 
@@ -24,7 +25,7 @@ export class Companion {
   private surface: PixelSurface;
   private metrics!: PixelMetrics;
   private win: Window & typeof window;
-  private frame = 0;
+  private animation: AnimationLoop;
   private destroyed = false;
   private lastFrame = 0;
   private elapsed = 0;
@@ -32,6 +33,8 @@ export class Companion {
   private lastAction: Action | null = null;
   private lookSide = 1;
   private lastPaint = 0;
+  private nextPaint = 0;
+  private placement = { width: 0, height: 0, left: NaN, top: NaN, x: NaN, y: NaN, name: '' };
   private x = 240;
   private height = 0;
   private fall: FallState | null = null;
@@ -59,6 +62,7 @@ export class Companion {
 
   constructor(private doc: Document, private host: CompanionHost) {
     this.win = doc.defaultView!;
+    this.animation = new AnimationLoop(this.win, time => this.tick(time));
     this.motion = this.win.matchMedia('(prefers-reduced-motion: reduce)');
     this.root = doc.body.createDiv({ cls: 'lnp-root' });
     this.actor = this.root.createEl('button', { cls: 'lnp-actor' });
@@ -77,7 +81,7 @@ export class Companion {
       if (this.opened && !this.root.contains(event.target as Node)) this.close(false);
     });
     this.listen(this.actor, 'pointerenter', () => {
-      this.hovered = true; this.nearby = true; this.cancelClose();
+      this.hovered = true; this.nearby = true; this.cancelClose(); this.wake();
       if (this.grab || this.fall || this.landingRemaining > 0 || this.win.performance.now() < this.ignoreHoverUntil) return;
       this.clearHover();
       this.hoverTimer = this.win.setTimeout(() => { if (this.hovered) this.open(false); }, this.host.settings().hoverDelay);
@@ -94,8 +98,8 @@ export class Companion {
       else { this.pinned = true; if ((event as MouseEvent).detail === 0) this.focusFirst(); }
     });
     this.listen(this.actor, 'contextmenu', event => { event.preventDefault(); if (!this.grab?.active) { this.close(false); this.host.configure(); } });
-    this.listen(this.actor, 'focus', () => { this.focused = true; });
-    this.listen(this.actor, 'blur', () => { this.focused = false; });
+    this.listen(this.actor, 'focus', () => { this.focused = true; this.wake(); });
+    this.listen(this.actor, 'blur', () => { this.focused = false; this.wake(); });
     this.listen(this.fan, 'pointerenter', () => this.cancelClose());
     this.listen(this.fan, 'keydown', event => this.onMenuKey(event as KeyboardEvent));
     this.listen(this.doc, 'keydown', event => {
@@ -103,11 +107,15 @@ export class Companion {
       if (this.opened && (event as KeyboardEvent).key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.close(true); }
     }, true);
     this.listen(this.win, 'resize', () => { this.measure(); this.place(); if (this.opened) this.layoutFan(); });
-    this.listen(this.win, 'blur', () => { this.releaseGrab(); this.pointer = { x: -9999, y: -9999 }; this.close(false); this.clearHover(); });
-    this.listen(this.win, 'focus', () => { this.lastFrame = 0; });
-    this.listen(this.doc, 'visibilitychange', () => { if (this.doc.hidden) { this.releaseGrab(); this.close(false); this.clearHover(); } this.lastFrame = 0; });
-    this.listen(this.motion, 'change', () => { if (this.motion.matches && this.fall) this.land(); this.lastPaint = 0; });
-    this.frame = this.win.requestAnimationFrame(time => this.tick(time));
+    this.listen(this.win, 'blur', () => { this.releaseGrab(); this.pointer = { x: -9999, y: -9999 }; this.close(false); this.clearHover(); this.animation.cancel(); });
+    this.listen(this.win, 'focus', () => { this.lastFrame = 0; this.lastPaint = 0; this.wake(); });
+    this.listen(this.doc, 'visibilitychange', () => {
+      if (this.doc.hidden) { this.releaseGrab(); this.close(false); this.clearHover(); this.animation.cancel(); }
+      else this.wake();
+      this.lastFrame = 0;
+    });
+    this.listen(this.motion, 'change', () => { if (this.motion.matches && this.fall) this.land(); this.lastPaint = 0; this.wake(); });
+    this.tick(this.win.performance.now());
   }
 
   private listen(target: EventTarget, name: string, fn: (event: Event) => void, capture = false): void {
@@ -115,6 +123,7 @@ export class Companion {
   }
   private clearHover(): void { this.win.clearTimeout(this.hoverTimer); this.hoverTimer = 0; }
   private cancelClose(): void { this.win.clearTimeout(this.closeTimer); this.closeTimer = 0; }
+  private wake(): void { if (!this.destroyed && !this.doc.hidden && this.doc.hasFocus()) this.animation.wake(); }
   private measure(): void {
     this.metrics = pixelMetrics(this.host.settings().scale, this.win.devicePixelRatio);
     this.surface.resize(this.metrics);
@@ -132,15 +141,22 @@ export class Companion {
     return Math.max(0, this.floor - FOOT_ROW * this.metrics.cell - pad - 8);
   }
   private place(): void {
-    const { width, height: imageHeight, cell, ratio } = this.metrics;
-    const height = Math.max(44, imageHeight), topPad = (height - imageHeight) / 2;
+    const { height: imageHeight, cell, ratio } = this.metrics;
+    const width = this.actorWidth(), height = Math.max(44, imageHeight), topPad = (height - imageHeight) / 2;
     const actorLeft = snapToPixel(this.x, ratio), actorTop = snapToPixel(this.floor - this.height - FOOT_ROW * cell - topPad, ratio);
-    this.actor.style.width = `${this.actorWidth()}px`; this.actor.style.height = `${height}px`;
-    this.canvas.style.left = `${snapToPixel(actorLeft + (this.actorWidth() - width) / 2, ratio) - actorLeft}px`;
-    this.canvas.style.top = `${snapToPixel(actorTop + topPad, ratio) - actorTop}px`;
-    this.actor.style.transform = `translate(${actorLeft}px, ${actorTop}px)`;
+    const canvasLeft = snapToPixel(actorLeft + (width - this.metrics.width) / 2, ratio) - actorLeft;
+    const canvasTop = snapToPixel(actorTop + topPad, ratio) - actorTop;
+    const previous = this.placement;
+    if (previous.width !== width) { this.actor.style.width = `${width}px`; previous.width = width; }
+    if (previous.height !== height) { this.actor.style.height = `${height}px`; previous.height = height; }
+    if (Math.abs(previous.left - canvasLeft) > 1e-6 || Number.isNaN(previous.left)) { this.canvas.style.left = `${canvasLeft}px`; previous.left = canvasLeft; }
+    if (Math.abs(previous.top - canvasTop) > 1e-6 || Number.isNaN(previous.top)) { this.canvas.style.top = `${canvasTop}px`; previous.top = canvasTop; }
+    if (previous.x !== actorLeft || previous.y !== actorTop) { this.actor.style.transform = `translate(${actorLeft}px, ${actorTop}px)`; previous.x = actorLeft; previous.y = actorTop; }
     const name = this.host.name();
-    this.actor.setAttribute('aria-label', `${name} — drag to move, hover for favorite commands`); this.actor.title = `${name} · drag to move · hover for your commands`;
+    if (previous.name !== name) {
+      this.actor.setAttribute('aria-label', `${name} — drag to move, hover for favorite commands`); this.actor.title = `${name} · drag to move · hover for your commands`;
+      previous.name = name;
+    }
   }
   private actorWidth(): number { return Math.max(40, this.metrics.width); }
   private startGrab(event: PointerEvent): void {
@@ -162,10 +178,11 @@ export class Companion {
     if (this.motion.matches || this.height === 0) this.land();
     else this.fall = { height: this.height, velocity: 0 };
     this.lastPaint = 0;
+    this.wake();
   }
   private land(): void {
     this.fall = null; this.height = 0; this.landingRemaining = LANDING_SECONDS;
-    this.lastPaint = 0; this.place();
+    this.lastPaint = 0; this.place(); this.wake();
   }
   private onPointer(event: PointerEvent): void {
     if (this.grab && event.pointerId === this.grab.pointerId) {
@@ -173,7 +190,7 @@ export class Companion {
       const dx = event.clientX - this.grab.startX, dy = event.clientY - this.grab.startY;
       if (!this.grab.active && Math.hypot(dx, dy) >= 6) {
         this.grab.active = true; this.close(false); this.fall = null; this.landingRemaining = 0;
-        this.root.dataset.dragging = 'true'; this.lastPaint = 0;
+        this.root.dataset.dragging = 'true'; this.lastPaint = 0; this.wake();
       }
       if (this.grab.active) {
         event.preventDefault(); this.x = clamp(this.grab.originX + dx, this.left, this.right);
@@ -183,7 +200,9 @@ export class Companion {
     }
     if (event.pointerType === 'touch') return;
     this.pointer = { x: event.clientX, y: event.clientY };
+    const wasNearby = this.nearby;
     this.updateAttention();
+    if (wasNearby !== this.nearby) this.wake();
     if (this.opened && !this.pinned) {
       const box = this.fanBox;
       const safe = event.clientX >= box.left - 20 && event.clientX <= box.right + 20 && event.clientY >= box.top - 18 && event.clientY <= box.bottom + 18;
@@ -231,20 +250,26 @@ export class Companion {
       : this.landingRemaining > 0 ? 'land' : this.opened ? 'offer' : this.nearby ? 'watch' : this.motion.matches ? 'idle' : this.brain.action;
     if (action !== this.lastAction) { this.lastAction = action; this.actionElapsed = 0; }
     else if (active) this.actionElapsed += dt;
-    if ((active && time - this.lastPaint >= 80) || !this.lastPaint) {
+    if ((active && time >= this.nextPaint) || !this.lastPaint) {
       const gazeX = (this.pointer.x - this.x - this.actorWidth() / 2) / 40;
       const gazeY = (this.pointer.y - this.floor + this.height + 17 * this.metrics.cell) / (20 * this.metrics.cell);
       if (Math.abs(gazeX) > .12) this.lookSide = Math.sign(gazeX);
-      this.root.dataset.action = action;
-      this.root.dataset.character = this.host.settings().character;
-      this.root.dataset.look = lookDirection(gazeX, gazeY, this.lookSide);
+      if (this.root.dataset.action !== action) this.root.dataset.action = action;
+      const character = this.host.settings().character, look = lookDirection(gazeX, gazeY, this.lookSide);
+      if (this.root.dataset.character !== character) this.root.dataset.character = character;
+      if (this.root.dataset.look !== look) this.root.dataset.look = look;
       this.host.paint(this.surface.context, { action, character: this.host.settings().character === 'custom' ? 'pip' : this.host.settings().character as SpritePose['character'], time: this.elapsed, actionTime: this.actionElapsed,
         direction: action === 'watch' || action === 'offer' ? this.lookSide : this.brain.direction,
         gazeX, gazeY, reduced: this.motion.matches });
       this.surface.present();
+      this.nextPaint = !this.lastPaint ? time + 80 : this.nextPaint + 80 * Math.max(1, Math.floor((time - this.nextPaint) / 80) + 1);
       this.lastPaint = time;
     }
-    this.frame = this.win.requestAnimationFrame(next => this.tick(next));
+    const still = this.motion.matches && !this.grab && !this.fall && this.landingRemaining === 0 && !this.nearby;
+    if (active && !still) {
+      const walking = !this.grab && this.landingRemaining === 0 && !this.nearby && !this.motion.matches && this.brain.action === 'walk';
+      this.animation.schedule(time, this.fall ? 1000 / 60 : walking ? 1000 / 30 : 80);
+    } else this.animation.cancel();
   }
 
   open(keyboard = false): void {
@@ -280,6 +305,7 @@ export class Companion {
     }
     this.fan.hidden = false; this.layoutFan();
     if (keyboard) this.focusFirst();
+    this.wake();
   }
   private layoutFan(): void {
     this.fan.querySelector('.lnp-stems')?.remove();
@@ -325,12 +351,13 @@ export class Companion {
     this.lastPaint = 0;
     if (restore) this.restoreFocus();
     this.ignoreHoverUntil = this.win.performance.now() + 400;
+    this.wake();
   }
   recall(anchor?: HTMLElement): void {
     this.releaseGrab(); this.fall = null; this.height = 0; this.landingRemaining = 0;
     this.close(false); this.measure();
     this.x = clamp(anchor ? anchor.getBoundingClientRect().left - this.actorWidth() / 2 : this.win.innerWidth * .45, this.left, this.right);
-    this.brain = { action: 'wave', remaining: 3, direction: 1, destination: this.x }; this.place(); this.lastPaint = 0;
+    this.brain = { action: 'wave', remaining: 3, direction: 1, destination: this.x }; this.place(); this.lastPaint = 0; this.wake();
   }
   refresh(rebuild = false): void {
     this.measure(); this.place();
@@ -338,10 +365,11 @@ export class Companion {
       if (rebuild) { const pinned = this.pinned; this.open(false); this.pinned = pinned; }
       else this.layoutFan();
     }
+    this.wake();
   }
   destroy(): void {
     this.releaseGrab();
-    this.destroyed = true; this.win.cancelAnimationFrame(this.frame); this.clearHover(); this.cancelClose();
+    this.destroyed = true; this.animation.cancel(); this.clearHover(); this.cancelClose();
     for (const dispose of this.disposers) dispose(); this.root.remove();
   }
 }

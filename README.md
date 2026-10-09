@@ -150,6 +150,16 @@ Mouse interaction is the main idea, and keyboard access is available too:
 - Press **Escape** to close the fan and restore the previous focus.
 - **Just Simple NPC: Call your companion here** brings it back; **Just Simple NPC: Configure favorites** opens settings.
 
+## Resource use
+
+A visible companion still does animation work when you are not typing: it walks, blinks and watches the pointer. **Idle does not mean zero CPU.** Its animation clock stops when the Obsidian window is hidden or unfocused. With the system's **Reduce motion** preference enabled, a resting companion has no continuous animation loop; interaction wakes it when needed.
+
+Since **0.7.3**, walking updates run at 30 Hz and stationary behaviors at the sprite cadence, about 12.5 Hz. Dragging follows pointer events directly, and falling retains 60 Hz updates. Position and state attributes change only when necessary. Settings share one animation clock per document, animate only visible previews and stop those animations when closed.
+
+A controlled 10-second walking test reduced update calls from **600 to 300** and DOM attribute writes from **1,980 to 300**, with the same distance traveled. This uses native DOM/canvas in an isolated document with a virtual 60 Hz clock; the figures describe work removed, **not CPU or battery percentages**. Resource use varies with the computer, display and vault.
+
+Thanks to [u/gamarala_in_distress](https://www.reddit.com/user/gamarala_in_distress/) for asking ["does it drain resources on idle ?"](https://www.reddit.com/r/ObsidianMD/comments/1wuvon6/comment/pescsxd/) and prompting this closer look.
+
 ## Privacy and compatibility
 
 Just Simple NPC has **no runtime dependencies, network requests, analytics or command usage history**. Settings stay in this vault. It does not read your note contents. Selected commands run through Obsidian's command dispatcher and retain their normal behavior.
@@ -167,7 +177,7 @@ npm ci
 npm run check
 ```
 
-`check` runs the official Obsidian ESLint rules with zero warnings, a CSS check prohibiting `!important`, strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement, autonomous movement bounds, falling physics at different refresh rates, command searches, the shipped sprite sheets and background removal. GitHub Actions runs the same checks on pushes and pull requests.
+`check` runs the official Obsidian ESLint rules with zero warnings, a CSS check prohibiting `!important`, strict TypeScript checking, the unit tests and a production build. `npm run build` creates `main.js`. The tests cover settings recovery, preserved choices, screen pixel scaling, sprite bounds, the four head directions, greeting phases, label abbreviation, fan placement, autonomous movement bounds, falling physics at different refresh rates, command searches, the shipped sprite sheets and background removal. Animation tests also cover scheduling at 30, 60, 120 and 144 Hz, visible-only preview clocks, pause/resume, reduced motion and cleanup. GitHub Actions runs the same checks on pushes and pull requests.
 
 Version tags run a separate [release workflow](.github/workflows/release.yml). It checks that the tag, package, manifest and minimum-version mapping agree, builds from that tagged source, and creates GitHub artifact attestations for `main.js`, `manifest.json` and `styles.css`. It verifies provenance before publishing, then downloads the release and checks both byte equality and attestations again.
 
@@ -188,6 +198,7 @@ The main pieces are:
 - `scripts/export-sheets.mjs`: reproducible native and enlarged PNG templates.
 - `src/pixel-grid.ts`: integer enlargement and physical-pixel alignment.
 - `src/companion.ts`: wandering, dragging, pointer attention and the command fan.
+- `src/animation.ts`: deadline-driven animation and shared, visible-only settings previews.
 - `src/physics.ts`: acceleration, falling speed limit and landing timing.
 - `src/command-search.ts`: command matching and sidebar search aliases.
 - `src/core.ts`: settings, behavior choices and fan geometry.
