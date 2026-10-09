@@ -5,6 +5,7 @@ import { ACTIONS, CHARACTERS, SIZES, normalizeSettings, type Action, type Charac
 import { PixelSurface, pixelMetrics } from './pixel-grid';
 import { searchCommands } from './command-search';
 import type { BackgroundMode } from './sheet-pixels';
+import { PreviewAnimator } from './animation';
 
 class SheetPicker extends SuggestModal<TFile> {
   private files: TFile[];
@@ -37,6 +38,7 @@ class CommandPicker extends SuggestModal<Command> {
 
 export class NpcSettings extends PluginSettingTab {
   private previewStops = new Set<() => void>();
+  private previewGroups = new Map<Document, PreviewAnimator>();
   constructor(app: App, private npc: JustSimpleNpcPlugin) {
     super(app, npc); npc.register(() => this.stopPreviews());
   }
@@ -228,25 +230,22 @@ export class NpcSettings extends PluginSettingTab {
 
   private preview(canvas: HTMLCanvasElement, action: Action, character: Character | 'custom'): () => void {
     canvas.setAttribute('aria-hidden', 'true');
-    const win = canvas.ownerDocument.defaultView!;
-    const surface = new PixelSurface(canvas);
-    const reduced = win.matchMedia('(prefers-reduced-motion: reduce)');
-    const start = win.performance.now(); let last = -Infinity, frame = 0, stopped = false;
-    const paint = (time: number) => {
-      surface.resize(pixelMetrics(2, win.devicePixelRatio)); surface.align(win.devicePixelRatio);
+    const doc = canvas.ownerDocument, win = doc.defaultView!;
+    const initial = pixelMetrics(2, win.devicePixelRatio);
+    canvas.style.width = `${initial.width}px`; canvas.style.height = `${initial.height}px`;
+    let surface: PixelSurface | undefined, ratio = 0;
+    const paint = (time: number, align: boolean, reduced: boolean) => {
+      surface ??= new PixelSurface(canvas);
+      if (ratio !== win.devicePixelRatio) { ratio = win.devicePixelRatio; surface.resize(pixelMetrics(2, ratio)); align = true; }
+      if (align) surface.align(ratio);
       this.npc.paint(surface.context, { action, character: character === 'custom' ? 'pip' : character, time, actionTime: time, direction: 1,
-        gazeX: Math.sin(time * .8), gazeY: Math.cos(time * .6) - .6, reduced: reduced.matches }, character === 'custom');
+        gazeX: Math.sin(time * .8), gazeY: Math.cos(time * .6) - .6, reduced }, character === 'custom');
       surface.present();
     };
-    paint(.8);
-    const stop = () => { stopped = true; win.cancelAnimationFrame(frame); this.previewStops.delete(stop); };
-    const animate = (now: number) => {
-      if (stopped) return;
-      if (!canvas.isConnected) { stop(); return; }
-      if (now - last >= 100 && !canvas.ownerDocument.hidden) { paint((now - start) / 1000); last = now; }
-      frame = win.requestAnimationFrame(animate);
-    };
-    this.previewStops.add(stop); frame = win.requestAnimationFrame(animate);
+    let group = this.previewGroups.get(doc);
+    if (!group) { group = new PreviewAnimator(doc, () => this.previewGroups.delete(doc)); this.previewGroups.set(doc, group); }
+    const stop = group.add(canvas, paint, () => this.previewStops.delete(stop));
+    this.previewStops.add(stop);
     return stop;
   }
 }

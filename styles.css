@@ -28,6 +28,7 @@
   cursor: grab;
   touch-action: none;
   user-select: none;
+  will-change: transform;
 }
 .lnp-root[data-dragging="true"] button.lnp-actor { cursor: grabbing; }
 .lnp-settings canvas.lnp-custom-preview { flex-shrink: 0; margin-inline-end: 14px; image-rendering: pixelated; }

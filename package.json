@@ -1,6 +1,6 @@
 {
   "name": "just-simple-npc",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "description": "A small pixel companion with a fan of your favorite commands.",
   "author": "David Hurtado",
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "esbuild src/main.ts --bundle --platform=browser --format=cjs --target=es2020 --external:obsidian --minify --outfile=main.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/core.test.mjs tests/sheets.test.mjs",
+    "test": "node --experimental-strip-types --test tests/core.test.mjs tests/sheets.test.mjs tests/animation.test.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "lint": "eslint src --max-warnings 0 && stylelint styles.css",
     "export:sheets": "node --experimental-strip-types scripts/export-sheets.mjs"
