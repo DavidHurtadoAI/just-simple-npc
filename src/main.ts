@@ -1,4 +1,4 @@
-import { Plugin, Notice, setIcon, TFile, normalizePath, type App, type Command } from 'obsidian';
+import { Menu, Plugin, Notice, setIcon, TFile, normalizePath, type App, type Command } from 'obsidian';
 import { CHARACTERS, normalizeSettings, type Settings } from './core';
 import { Companion, type FanCommand } from './companion';
 import { NpcSettings } from './settings';
@@ -53,6 +53,12 @@ export default class JustSimpleNpcPlugin extends Plugin {
     this.addCommand({ id: 'open-fan', name: 'Open favorites', callback: () => this.companion?.open(true) });
     this.addCommand({ id: 'recall', name: 'Call your companion here', callback: () => this.companion?.recall() });
     this.addCommand({ id: 'configure', name: 'Configure favorites', callback: () => this.openSettings() });
+    this.addCommand({ id: 'toggle-hand-pointer', name: 'Toggle hand pointer', callback: () => this.companion?.toggleHand() });
+    this.addCommand({ id: 'toggle-touch-drawing', name: 'Toggle touch drawing', checkCallback: checking => {
+      if (!this.companion) return false;
+      if (!checking) new Notice(this.companion.toggleTouchDrawing() ? 'Touch drawing on' : 'Touch drawing off', 1400);
+      return true;
+    } });
     this.app.workspace.onLayoutReady(() => {
       if (this.shuttingDown) return;
       this.status = this.addStatusBarItem(); this.status.classList.add('lnp-status');
@@ -67,6 +73,11 @@ export default class JustSimpleNpcPlugin extends Plugin {
         commands: () => this.fanCommands(),
         execute: id => this.execute(id),
         configure: () => this.openSettings(),
+        contextMenu: event => new Menu().setUseNativeMenu(false)
+          .addItem(item => item.setTitle('Show hand pointer').setIcon('pointer')
+            .onClick(() => this.companion?.toggleHand()))
+          .addItem(item => item.setTitle('Settings').setIcon('settings').onClick(() => this.openSettings()))
+          .showAtMouseEvent(event),
         decorateIcon: (el, icon) => setIcon(el, icon)
       });
       this.registerEvent(this.app.workspace.on('layout-change', () => this.companion?.refresh()));

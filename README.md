@@ -8,6 +8,24 @@
 [![CI](https://github.com/DavidHurtadoAI/just-simple-npc/actions/workflows/ci.yml/badge.svg)](https://github.com/DavidHurtadoAI/just-simple-npc/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+## Tiny Hand comes to Just Simple NPC
+
+**New in 0.8.0.** Give your companion a hand for presenting, recording demos, or walking someone through a note. The white glove stretches out from the NPC and follows the pointer. Tap to highlight a spot, or draw over the screen in red.
+
+<img src="docs/images/tiny-hand-in-obsidian.png" alt="Pip extends a white glove into an Obsidian note and circles part of a diagram in red" width="800">
+
+| A tap up close | The NPC's right-click menu |
+| --- | --- |
+| <img src="docs/images/tiny-hand-tap-detail.png" alt="Detail of the white glove and a pixel burst at the fingertip" width="330"> | <img src="docs/images/tiny-hand-right-click.png" alt="Pip's context menu with Show hand pointer and Settings" width="330"> |
+
+- **Double-click the NPC**, right-click it and choose **Show hand pointer**, or assign a shortcut to **Just Simple NPC: Toggle hand pointer** in **Settings → Hotkeys**.
+- **Click** for a brief pixel burst and one soft tap sound. Each is independently picked from three variants.
+- **Hold the left button and drag** to draw a smooth red stroke. Right-click to put the hand away and clear the marks.
+- **Draw with a finger** on a desktop touchscreen using a separate shortcut for **Just Simple NPC: Toggle touch drawing**. The glove follows your finger while it touches the screen. Use the same shortcut to turn touch drawing off and clear the marks.
+- **Present with Just Simple Slides** in a window or fullscreen. Use the arrow keys to change slides while the hand is active.
+
+The glove, animation and synthesized audio are built into the plugin and run locally. The feature takes inspiration from desktop pointers like TinyHand and Pokey. [TinyHand](https://github.com/nilbuild/tinyhand) · [Pokey](https://pokeyapp.com/)
+
 ## Your commands, a hover away
 
 Hover over the character to open a fan of speech bubbles. Click a bubble to run that command in your current Obsidian context. You can also click the character to open the fan immediately.
@@ -101,7 +119,7 @@ If you tried the earlier **Little NPC** development build, disable it first and 
 | **Hover delay** | Wait from 0 to 800 milliseconds before opening the fan. Clicking opens it immediately. | 180 ms |
 | **Bring your companion back** | Call the NPC to a nearby spot. | Also available from the status bar |
 
-Click the companion's name in the status bar to call it over. Right-click the character or the status-bar name to open settings.
+Click the companion's name in the status bar to call it over. Right-click the character for its menu or the status-bar name for settings.
 
 The settings use Obsidian's native declarative API and appear in its settings search. Search for **Character size**, **Walking speed**, **Hover delay**, or a numbered command slot. Slider values appear inline. The character cards and behavior gallery keep their animated previews.
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0
+
+### Tiny Hand comes to Just Simple NPC
+
+- Give your companion an extendable hand pointer for demos, recordings and presentations. Double-click the NPC, choose **Show hand pointer** from its right-click menu, or assign a hotkey.
+- Click to highlight a spot. Each tap randomly pairs one of three soft sounds with one of three pixel bursts. Drag to draw a smooth red stroke. Right-click to put the hand away and clear the marks.
+- Turn on **Toggle touch drawing** with its own hotkey to point and draw with a finger on a desktop touchscreen. The hand follows the contact and retracts when the finger lifts.
+- Use the pointer in Obsidian and in Just Simple Slides presentations, including fullscreen. The pointer, artwork and synthesized sounds run locally.
+
 ## 0.7.3
 
 Thanks to [u/gamarala_in_distress](https://www.reddit.com/user/gamarala_in_distress/) for asking ["does it drain resources on idle ?"](https://www.reddit.com/r/ObsidianMD/comments/1wuvon6/comment/pescsxd/). That question prompted a closer look at animation work and this performance update.
