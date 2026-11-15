@@ -24,6 +24,14 @@
 - **Draw with a finger** on a desktop touchscreen using a separate shortcut for **Just Simple NPC: Toggle touch drawing**. The glove follows your finger while it touches the screen. Use the same shortcut to turn touch drawing off and clear the marks.
 - **Present with Just Simple Slides** in a window or fullscreen. Use the arrow keys to change slides while the hand is active.
 
+### Set up your hotkeys
+
+Try assigning shortcuts for quick access during a demo. Open **Settings → Hotkeys**, search for `npc`, and click **+** next to **Toggle hand pointer** and **Toggle touch drawing**.
+
+<img src="docs/images/tiny-hand-hotkeys.png" alt="Obsidian Hotkeys showing example shortcuts Ctrl+Shift+H for the hand pointer and Ctrl+Shift+D for touch drawing" width="760">
+
+*Example setup with `Ctrl+Shift+H` for the hand pointer and `Ctrl+Shift+D` for touch drawing. Pick the combinations that suit your workflow.*
+
 The glove, animation and synthesized audio are built into the plugin and run locally. The feature takes inspiration from desktop pointers like TinyHand and Pokey. [TinyHand](https://github.com/nilbuild/tinyhand) · [Pokey](https://pokeyapp.com/)
 
 ## Your commands, a hover away
