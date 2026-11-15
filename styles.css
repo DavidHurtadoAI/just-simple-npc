@@ -35,6 +35,26 @@
 .lnp-root button.lnp-actor:hover { background: transparent; }
 .lnp-root button.lnp-actor:focus-visible { outline: 2px solid var(--interactive-accent, #9dc3ac); outline-offset: 3px; }
 .lnp-root button.lnp-actor canvas { position: absolute; display: block; image-rendering: pixelated; pointer-events: none; }
+.lnp-hand-pointer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10001;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+body.lnp-hand-pointing .lnp-hand-pointer {
+  pointer-events: auto;
+  cursor: none;
+}
+body.lnp-hand-pointing .lnp-root button.lnp-actor {
+  z-index: 10002;
+  cursor: none;
+}
+body.lnp-touch-drawing,
+body.lnp-touch-drawing * {
+  touch-action: none;
+}
 .lnp-fan { position: absolute; pointer-events: none; }
 .lnp-root .lnp-fan[hidden] { display: none; }
 .lnp-stems { position: absolute; inset: 0; overflow: visible; pointer-events: none; }

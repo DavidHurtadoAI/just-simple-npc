@@ -3,6 +3,7 @@ import { lookDirection, type SpritePose } from './sprite';
 import { FOOT_ROW, PixelSurface, pixelMetrics, snapToPixel, type PixelMetrics } from './pixel-grid';
 import { advanceFall, LANDING_SECONDS, type FallState } from './physics';
 import { AnimationLoop } from './animation';
+import { HandPointer } from './hand-pointer';
 
 interface Grab { pointerId: number; startX: number; startY: number; originX: number; originHeight: number; active: boolean }
 
@@ -14,6 +15,7 @@ export interface CompanionHost {
   commands(): FanCommand[];
   execute(id: string): void;
   configure(): void;
+  contextMenu(event: MouseEvent): void;
   decorateIcon(el: HTMLElement, icon: string): void;
 }
 
@@ -26,6 +28,7 @@ export class Companion {
   private metrics!: PixelMetrics;
   private win: Window & typeof window;
   private animation: AnimationLoop;
+  private hand: HandPointer;
   private destroyed = false;
   private lastFrame = 0;
   private elapsed = 0;
@@ -72,6 +75,7 @@ export class Companion {
     this.canvas = this.actor.createEl('canvas');
     this.canvas.setAttribute('aria-hidden', 'true'); this.actor.append(this.canvas);
     this.surface = new PixelSurface(this.canvas);
+    this.hand = new HandPointer(doc, this.root, this.canvas);
     this.fan = this.root.createDiv({ cls: 'lnp-fan' });
     this.fan.setAttribute('role', 'menu'); this.fan.setAttribute('aria-label', 'Favorite commands'); this.fan.hidden = true;
     this.root.append(this.actor, this.fan); this.doc.body.append(this.root);
@@ -82,7 +86,7 @@ export class Companion {
     });
     this.listen(this.actor, 'pointerenter', () => {
       this.hovered = true; this.nearby = true; this.cancelClose(); this.wake();
-      if (this.grab || this.fall || this.landingRemaining > 0 || this.win.performance.now() < this.ignoreHoverUntil) return;
+      if (this.hand.pointing || this.grab || this.fall || this.landingRemaining > 0 || this.win.performance.now() < this.ignoreHoverUntil) return;
       this.clearHover();
       this.hoverTimer = this.win.setTimeout(() => { if (this.hovered) this.open(false); }, this.host.settings().hoverDelay);
     });
@@ -97,7 +101,16 @@ export class Companion {
       if (!this.opened) this.open((event as MouseEvent).detail === 0);
       else { this.pinned = true; if ((event as MouseEvent).detail === 0) this.focusFirst(); }
     });
-    this.listen(this.actor, 'contextmenu', event => { event.preventDefault(); if (!this.grab?.active) { this.close(false); this.host.configure(); } });
+    this.listen(this.actor, 'dblclick', event => {
+      if ((event as MouseEvent).button !== 0 || this.grab || this.fall || this.win.performance.now() < this.suppressClickUntil) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggleHand();
+    });
+    this.listen(this.actor, 'contextmenu', event => {
+      event.preventDefault();
+      if (!this.grab?.active) { this.close(false); this.host.contextMenu(event as MouseEvent); }
+    });
     this.listen(this.actor, 'focus', () => { this.focused = true; this.wake(); });
     this.listen(this.actor, 'blur', () => { this.focused = false; this.wake(); });
     this.listen(this.fan, 'pointerenter', () => this.cancelClose());
@@ -151,7 +164,10 @@ export class Companion {
     if (previous.height !== height) { this.actor.style.height = `${height}px`; previous.height = height; }
     if (Math.abs(previous.left - canvasLeft) > 1e-6 || Number.isNaN(previous.left)) { this.canvas.style.left = `${canvasLeft}px`; previous.left = canvasLeft; }
     if (Math.abs(previous.top - canvasTop) > 1e-6 || Number.isNaN(previous.top)) { this.canvas.style.top = `${canvasTop}px`; previous.top = canvasTop; }
-    if (previous.x !== actorLeft || previous.y !== actorTop) { this.actor.style.transform = `translate(${actorLeft}px, ${actorTop}px)`; previous.x = actorLeft; previous.y = actorTop; }
+    if (previous.x !== actorLeft || previous.y !== actorTop) {
+      this.actor.style.transform = `translate(${actorLeft}px, ${actorTop}px)`; previous.x = actorLeft; previous.y = actorTop;
+      this.hand.refresh();
+    }
     const name = this.host.name();
     if (previous.name !== name) {
       this.actor.setAttribute('aria-label', `${name} — drag to move, hover for favorite commands`); this.actor.title = `${name} · drag to move · hover for your commands`;
@@ -216,7 +232,7 @@ export class Companion {
     const distance = Math.hypot(dx, dy);
     const approaching = distance < this.host.settings().proximity;
     if (approaching || this.hovered || this.focused || this.opened) this.attentionUntil = this.win.performance.now() + 750;
-    this.nearby = approaching || this.hovered || this.focused || this.opened || this.win.performance.now() < this.attentionUntil;
+    this.nearby = this.hand.pointing || approaching || this.hovered || this.focused || this.opened || this.win.performance.now() < this.attentionUntil;
   }
   private tick(time: number): void {
     if (this.destroyed) return;
@@ -262,6 +278,7 @@ export class Companion {
         direction: action === 'watch' || action === 'offer' ? this.lookSide : this.brain.direction,
         gazeX, gazeY, reduced: this.motion.matches });
       this.surface.present();
+      this.hand.refreshSprite();
       this.nextPaint = !this.lastPaint ? time + 80 : this.nextPaint + 80 * Math.max(1, Math.floor((time - this.nextPaint) / 80) + 1);
       this.lastPaint = time;
     }
@@ -367,8 +384,18 @@ export class Companion {
     }
     this.wake();
   }
+  toggleHand(): void {
+    this.close(false);
+    this.hand.toggle(this.pointer.x >= 0 && this.pointer.y >= 0 ? this.pointer : null);
+    this.wake();
+  }
+  toggleTouchDrawing(): boolean {
+    this.close(false);
+    return this.hand.toggle(null, 'touch');
+  }
   destroy(): void {
     this.releaseGrab();
+    this.hand.stop();
     this.destroyed = true; this.animation.cancel(); this.clearHover(); this.cancelClose();
     for (const dispose of this.disposers) dispose(); this.root.remove();
   }

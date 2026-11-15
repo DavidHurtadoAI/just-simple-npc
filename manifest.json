@@ -1,9 +1,9 @@
 {
   "id": "just-simple-npc",
   "name": "Just Simple NPC",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "minAppVersion": "1.13.0",
-  "description": "A little pixel companion walking along your status bar, with your favorite commands a hover away.",
+  "description": "A pixel companion with favorite commands and a hand pointer for drawing and presenting.",
   "author": "David Hurtado",
   "isDesktopOnly": true
 }
